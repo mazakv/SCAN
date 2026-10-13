@@ -211,50 +211,214 @@ function Clear-PendingToolChoices {
     }
 }
 
+function Get-OptionalToolStatus([hashtable]$Item) {
+    $number = [int]$Item.N
+    $name = [string]$Item.Name
+    $packageId = [string]$Item.PackageId
+
+    # Use a small set of known executable names; never run a command from user input.
+    $commands = @()
+    switch ($number) {
+        1 { $commands = @('nmap.exe', 'nmap') }
+        2 { $commands = @('Wireshark.exe', 'tshark.exe') }
+        3 { $commands = @('autorunsc64.exe', 'autorunsc.exe', 'sigcheck64.exe', 'sigcheck.exe', 'procexp64.exe', 'procexp.exe') }
+        4 { $commands = @('openssl.exe', 'openssl') }
+        5 { $commands = @('git.exe', 'git') }
+        6 { $commands = @('python3.12.exe', 'python3.12') }
+        7 { $commands = @('node.exe', 'node') }
+        8 { $commands = @('7z.exe', '7zz.exe', '7z') }
+        9 { $commands = @('clamscan.exe', 'clamscan') }
+        10 { $commands = @('gitleaks.exe', 'gitleaks') }
+        11 { $commands = @('trivy.exe', 'trivy') }
+        12 { $commands = @('gh.exe', 'gh') }
+        13 { $commands = @('Docker Desktop.exe') }
+        14 { $commands = @('pwsh.exe', 'pwsh') }
+        15 { $commands = @('curl.exe') }
+        16 { $commands = @('ruff.exe', 'ruff') }
+    }
+
+    # Python must specifically be 3.12; a different Python version is not a match.
+    if ($number -eq 6) {
+        $pyLauncher = Get-Command 'py.exe' -ErrorAction SilentlyContinue
+        if ($pyLauncher) {
+            try {
+                $pythonVersion = (& $pyLauncher.Source -3.12 --version 2>$null | Select-Object -First 1)
+                if ($pythonVersion -match 'Python\s+3\.12\.') { return 'INSTALLED' }
+            } catch {}
+        }
+    }
+
+    foreach ($commandName in $commands) {
+        if (Get-Command -Name $commandName -ErrorAction SilentlyContinue) { return 'INSTALLED' }
+    }
+
+    $programFiles = $env:ProgramFiles
+    if (-not $programFiles) { $programFiles = 'C:\Program Files' }
+    $programFiles86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+    if (-not $programFiles86) { $programFiles86 = 'C:\Program Files (x86)' }
+    $localAppData = $env:LOCALAPPDATA
+    if (-not $localAppData) { $localAppData = Join-Path $env:USERPROFILE 'AppData\Local' }
+    $systemRoot = $env:SystemRoot
+    if (-not $systemRoot) { $systemRoot = 'C:\Windows' }
+
+    $candidatePaths = @()
+    switch ($number) {
+        1 { $candidatePaths = @((Join-Path $programFiles 'Nmap\nmap.exe'), (Join-Path $programFiles86 'Nmap\nmap.exe')) }
+        2 { $candidatePaths = @((Join-Path $programFiles 'Wireshark\Wireshark.exe'), (Join-Path $programFiles 'Wireshark\tshark.exe'), (Join-Path $programFiles86 'Wireshark\Wireshark.exe')) }
+        3 { $candidatePaths = @((Join-Path $programFiles 'Sysinternals Suite\Autoruns64.exe'), (Join-Path $programFiles 'Sysinternals Suite\autorunsc64.exe'), (Join-Path $programFiles86 'Sysinternals Suite\autorunsc64.exe')) }
+        4 { $candidatePaths = @((Join-Path $programFiles 'OpenSSL-Win64\bin\openssl.exe'), (Join-Path $programFiles 'OpenSSL\bin\openssl.exe')) }
+        5 { $candidatePaths = @((Join-Path $programFiles 'Git\cmd\git.exe'), (Join-Path $programFiles 'Git\bin\git.exe'), (Join-Path $localAppData 'Programs\Git\cmd\git.exe')) }
+        6 { $candidatePaths = @((Join-Path $localAppData 'Programs\Python\Python312\python.exe'), (Join-Path $programFiles 'Python312\python.exe'), (Join-Path $programFiles86 'Python312\python.exe')) }
+        7 { $candidatePaths = @((Join-Path $programFiles 'nodejs\node.exe'), (Join-Path $localAppData 'Programs\nodejs\node.exe')) }
+        8 { $candidatePaths = @((Join-Path $programFiles '7-Zip\7z.exe'), (Join-Path $programFiles86 '7-Zip\7z.exe')) }
+        9 { $candidatePaths = @((Join-Path $programFiles 'ClamAV\clamscan.exe'), (Join-Path $localAppData 'Programs\ClamAV\clamscan.exe')) }
+        10 { $candidatePaths = @((Join-Path $localAppData 'Microsoft\WinGet\Links\gitleaks.exe')) }
+        11 { $candidatePaths = @((Join-Path $localAppData 'Microsoft\WinGet\Links\trivy.exe')) }
+        12 { $candidatePaths = @((Join-Path $localAppData 'Microsoft\WinGet\Links\gh.exe')) }
+        13 { $candidatePaths = @((Join-Path $programFiles 'Docker\Docker\Docker Desktop.exe'), (Join-Path $programFiles 'Docker\Docker\frontend\Docker Desktop.exe'), (Join-Path $localAppData 'Programs\Docker\Docker\Docker Desktop.exe')) }
+        14 { $candidatePaths = @((Join-Path $programFiles 'PowerShell\7\pwsh.exe'), (Join-Path $localAppData 'Microsoft\PowerShell\pwsh.exe')) }
+        15 { $candidatePaths = @((Join-Path $systemRoot 'System32\curl.exe')) }
+        16 { $candidatePaths = @((Join-Path $localAppData 'Microsoft\WinGet\Links\ruff.exe')) }
+    }
+    foreach ($candidatePath in $candidatePaths) {
+        if ($candidatePath -and (Test-Path -LiteralPath $candidatePath -PathType Leaf)) { return 'INSTALLED' }
+    }
+
+    # Some applications are installed but do not add their CLI to PATH.
+    if (-not $script:InstalledAppNamesLoaded) {
+        $appNames = New-Object 'System.Collections.Generic.List[string]'
+        $uninstallRoots = @(
+            'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
+            'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
+            'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+        )
+        foreach ($root in $uninstallRoots) {
+            try {
+                Get-ItemProperty -Path $root -ErrorAction SilentlyContinue | ForEach-Object {
+                    if (-not [string]::IsNullOrWhiteSpace([string]$_.DisplayName)) {
+                        [void]$appNames.Add(([string]$_.DisplayName).ToLowerInvariant())
+                    }
+                }
+            } catch {}
+        }
+        $script:InstalledAppNames = @($appNames.ToArray())
+        $script:InstalledAppNamesLoaded = $true
+    }
+    $displayPatterns = @{
+        1 = '^nmap(?:\s|$)'; 2 = 'wireshark'; 3 = 'sysinternals'; 4 = 'openssl';
+        5 = '^(git(?:\s|$)|git for windows)'; 6 = '^python 3\.12(?:\s|$)';
+        7 = '^node\.js(?:\s|$)'; 8 = '^7-zip'; 9 = 'clamav'; 10 = 'gitleaks';
+        11 = '^trivy'; 12 = 'github (cli|command line)'; 13 = 'docker desktop';
+        14 = '^powershell 7'; 15 = '^curl'; 16 = 'ruff'
+    }
+    $pattern = $displayPatterns[$number]
+    if ($pattern) {
+        foreach ($displayName in $script:InstalledAppNames) {
+            if ($displayName -match $pattern) { return 'INSTALLED' }
+        }
+    }
+
+    # A saved WinGet package folder means files were downloaded, not necessarily installed.
+    $packagesRoot = Join-Path (Join-Path (Join-Path $PSScriptRoot 'downloads') 'packages') ''
+    $slug = $packageId -replace '[^A-Za-z0-9._-]+', '_'
+    $packageFolder = Join-Path $packagesRoot $slug
+    if (Test-Path -LiteralPath $packageFolder -PathType Container) {
+        try {
+            $savedFile = Get-ChildItem -LiteralPath $packageFolder -File -Recurse -ErrorAction SilentlyContinue |
+                Where-Object { $_.Length -gt 0 -and $_.Name -notlike '*.part' } | Select-Object -First 1
+            if ($savedFile) { return 'DOWNLOADED' }
+        } catch {}
+    }
+    return 'MISSING'
+}
+
+function Write-OptionalToolCell([int]$Row, [int]$Column, [string]$Text, [string]$Status) {
+    $cellWidth = 39
+    if ($Text.Length -gt $cellWidth) { $Text = $Text.Substring(0, $cellWidth - 1) + '…' }
+    try {
+        [Console]::SetCursorPosition($Column, $Row)
+        [Console]::Write((' ' * $cellWidth))
+        [Console]::SetCursorPosition($Column, $Row)
+        switch ($Status) {
+            'INSTALLED' { [Console]::ForegroundColor = [ConsoleColor]::Green }
+            'DOWNLOADED' { [Console]::ForegroundColor = [ConsoleColor]::Green }
+            default { [Console]::ForegroundColor = [ConsoleColor]::DarkGray }
+        }
+        [Console]::Write($Text.PadRight($cellWidth))
+        [Console]::ResetColor()
+    } catch {
+        $color = if ($Status -in @('INSTALLED', 'DOWNLOADED')) { [ConsoleColor]::Green } else { [ConsoleColor]::DarkGray }
+        Write-ConsoleRow $Row $Text $color -MaxWidth 88
+    }
+}
+
 function Show-PreDownloadSelection {
     $items = @(
-        @{N=1; Name='Nmap'},
-        @{N=2; Name='Wireshark'},
-        @{N=3; Name='Sysinternals Suite'},
-        @{N=4; Name='OpenSSL Light'},
-        @{N=5; Name='Git'},
-        @{N=6; Name='Python 3.12'},
-        @{N=7; Name='Node.js'},
-        @{N=8; Name='7-Zip'},
-        @{N=9; Name='ClamAV'},
-        @{N=10; Name='Gitleaks'},
-        @{N=11; Name='Trivy'},
-        @{N=12; Name='GitHub CLI'},
-        @{N=13; Name='Docker Desktop'},
-        @{N=14; Name='PowerShell 7'},
-        @{N=15; Name='cURL'},
-        @{N=16; Name='Ruff'}
+        @{N=1; Name='Nmap'; PackageId='Insecure.Nmap'},
+        @{N=2; Name='Wireshark'; PackageId='WiresharkFoundation.Wireshark'},
+        @{N=3; Name='Sysinternals Suite'; PackageId='Microsoft.Sysinternals.Suite'},
+        @{N=4; Name='OpenSSL Light'; PackageId='ShiningLight.OpenSSL.Light'},
+        @{N=5; Name='Git'; PackageId='Git.Git'},
+        @{N=6; Name='Python 3.12'; PackageId='Python.Python.3.12'},
+        @{N=7; Name='Node.js'; PackageId='OpenJS.NodeJS'},
+        @{N=8; Name='7-Zip'; PackageId='7zip.7zip'},
+        @{N=9; Name='ClamAV'; PackageId='Cisco.ClamAV'},
+        @{N=10; Name='Gitleaks'; PackageId='Gitleaks.Gitleaks'},
+        @{N=11; Name='Trivy'; PackageId='AquaSecurity.Trivy'},
+        @{N=12; Name='GitHub CLI'; PackageId='GitHub.cli'},
+        @{N=13; Name='Docker Desktop'; PackageId='Docker.DockerDesktop'},
+        @{N=14; Name='PowerShell 7'; PackageId='Microsoft.PowerShell'},
+        @{N=15; Name='cURL'; PackageId='cURL.cURL'},
+        @{N=16; Name='Ruff'; PackageId='astral-sh.ruff'}
     )
     while ($true) {
+        $states = @{}
+        foreach ($item in $items) { $states[[int]$item.N] = Get-OptionalToolStatus $item }
+        $allReady = @($items | Where-Object { $states[[int]$_.N] -eq 'MISSING' }).Count -eq 0
+
         try { [Console]::Clear() } catch { Clear-Host }
         $art = @(
             '  ███████╗  ██████╗  █████╗  ███╗   ██╗',
             '  ██╔════╝ ██╔════╝ ██╔══██╗ ████╗  ██║',
             '  ███████╗ ██║      ███████║ ██╔██╗ ██║',
-            '  ╚════██║ ██║      ██╔══██║ ██║╚██╗██║',
+            '  ╚════██║ ██║      ██╔██╗ ██║ ██║╚██╗██║',
             '  ███████║ ╚██████╗ ██║  ██║ ██║ ╚████║',
             '  ╚══════╝  ╚═════╝ ╚═╝  ╚═╝ ╚═╝  ╚═══╝'
         )
-        Animate-RainbowBanner $art 'PRE-DOWNLOAD SELECTION  |  45 MENU ITEMS + 16 CURATED APPS' 6
-        Write-ConsoleRow 7 '선택 도구를 먼저 고르세요. 아직 다운로드는 시작되지 않습니다.' ([ConsoleColor]::Gray) -Center -MaxWidth 88
+        Animate-RainbowBanner $art 'PRE-DOWNLOAD SELECTION  |  60 MENU ACTIONS + 16 CURATED APPS' 6
+        Write-ConsoleRow 7 'Choose optional tools before any download starts.' ([ConsoleColor]::Gray) -Center -MaxWidth 88
         Write-ConsoleRow 8 ('─' * 70) ([ConsoleColor]::DarkGray) -Center -MaxWidth 80
         for ($row = 0; $row -lt 8; $row++) {
             $left = $items[$row]
             $right = $items[$row + 8]
-            $leftText = (' [{0,2}] {1}' -f $left.N, $left.Name).PadRight(34)
-            $rightText = (' [{0,2}] {1}' -f $right.N, $right.Name)
-            Write-ConsoleRow (9 + $row) ($leftText + $rightText) ([ConsoleColor]::Gray) -MaxWidth 88
+            $leftStatus = $states[[int]$left.N]
+            $rightStatus = $states[[int]$right.N]
+            $leftMark = switch ($leftStatus) { 'INSTALLED' { 'INSTALLED' } 'DOWNLOADED' { 'DOWNLOADED' } default { 'MISSING' } }
+            $rightMark = switch ($rightStatus) { 'INSTALLED' { 'INSTALLED' } 'DOWNLOADED' { 'DOWNLOADED' } default { 'MISSING' } }
+            $leftText = (' [{0,2}] {1} [{2}]' -f $left.N, $left.Name, $leftMark)
+            $rightText = (' [{0,2}] {1} [{2}]' -f $right.N, $right.Name, $rightMark)
+            Write-OptionalToolCell (9 + $row) 2 $leftText $leftStatus
+            Write-OptionalToolCell (9 + $row) 43 $rightText $rightStatus
         }
-        Write-ConsoleRow 18 '번호: 1~16 / 범위: 1-4,9-11 / A=전체 16 / L=목록 / 0=건너뜀 / Q=취소' ([ConsoleColor]::Cyan) -MaxWidth 88
-        Write-ConsoleRow 20 '내장 메뉴 항목 45개 + 선택 설치 앱 16개. 필요한 도구만 선택하세요.' ([ConsoleColor]::Yellow) -MaxWidth 88
-        Write-ConsoleRow 21 '도구는 SCAN 메뉴 35~45에서 연동됩니다. L을 누르면 전체 설명서를 엽니다.' ([ConsoleColor]::Yellow) -MaxWidth 88
-        try { [Console]::SetCursorPosition(0, 23); [Console]::Write((' ' * ([Math]::Max(50, [Console]::WindowWidth) - 1))); [Console]::SetCursorPosition(0, 23) } catch {}
-        $raw = (Read-Host '도구 번호').Trim().ToLowerInvariant()
+        Write-ConsoleRow 18 'Green = installed or downloaded. Gray = missing.' ([ConsoleColor]::Cyan) -MaxWidth 88
+        Write-ConsoleRow 19 'I installs missing selected apps; U upgrades installed apps; D downloads package files only.' ([ConsoleColor]::Gray) -MaxWidth 88
+
+        if ($allReady) {
+            Write-ConsoleRow 21 'All 16 tools are already installed or downloaded.' ([ConsoleColor]::Green) -Center -MaxWidth 88
+            Write-ConsoleRow 22 'Continuing automatically in 3 seconds...' ([ConsoleColor]::Green) -Center -MaxWidth 88
+            Clear-PendingToolChoices
+            Write-PreDownloadSelection 'NONE'
+            Write-ConsentLog 'All optional apps were already installed or had cached downloads; showing green status for 3 seconds and skipping startup tool selection.' 'OK'
+            Start-Sleep -Seconds 3
+            return $true
+        }
+
+        Write-ConsoleRow 20 'A/M = select all tools not installed (cached downloads are shown in green).' ([ConsoleColor]::Yellow) -MaxWidth 88
+        Write-ConsoleRow 21 'U = select installed apps for update. Explicit numbers can be followed by I, U or D.' ([ConsoleColor]::Yellow) -MaxWidth 88
+        Write-ConsoleRow 22 'L = catalog  |  0 = skip  |  Q = cancel' ([ConsoleColor]::Yellow) -MaxWidth 88
+        try { [Console]::SetCursorPosition(0, 24); [Console]::Write((' ' * ([Math]::Max(50, [Console]::WindowWidth) - 1)); [Console]::SetCursorPosition(0, 24) } catch {}
+        $raw = (Read-Host 'Tool numbers / ranges / A / M / U / L / 0 / Q').Trim().ToLowerInvariant()
+
         if ($raw -eq 'q') {
             Write-ConsentLog 'Startup cancelled at optional package selection; no downloads started.' 'INFO'
             return $false
@@ -262,8 +426,8 @@ function Show-PreDownloadSelection {
         if ($raw -in @('0','none','skip')) {
             Clear-PendingToolChoices
             Write-PreDownloadSelection 'NONE'
-            Write-ConsentLog 'No optional packages selected before first download; a single warning will appear at the bottom of the SCAN main menu.' 'INFO'
-            Write-ConsoleRow 22 '선택 도구가 없습니다. 메인 메뉴 아래쪽에 경고가 한 번 표시됩니다.' ([ConsoleColor]::Yellow) -MaxWidth 88
+            Write-ConsentLog 'No optional packages selected before first download; optional applications can be managed later from menu 33.' 'INFO'
+            Write-ConsoleRow 23 'No optional tools selected. Continue to the main menu.' ([ConsoleColor]::Yellow) -MaxWidth 88
             Start-Sleep -Milliseconds 700
             return $true
         }
@@ -272,8 +436,23 @@ function Show-PreDownloadSelection {
             if (Test-Path -LiteralPath $catalogPath) { try { Start-Process -FilePath 'notepad.exe' -ArgumentList @($catalogPath) -Wait } catch { Write-ConsentLog ('Unable to open tool catalog: ' + $_.Exception.Message) 'WARN' } }
             continue
         }
-        if ($raw -in @('a','all')) {
-            $selected = 1..16
+
+        $presetAction = $null
+        if ($raw -eq 'u') {
+            $selected = @($items | Where-Object { $states[[int]$_.N] -eq 'INSTALLED' } | ForEach-Object { [int]$_.N })
+            $presetAction = 'u'
+            if ($selected.Count -eq 0) {
+                Write-ConsoleRow 23 'No installed apps were detected to update.' ([ConsoleColor]::Yellow) -MaxWidth 88
+                Start-Sleep -Milliseconds 900
+                continue
+            }
+        } elseif ($raw -in @('a','all','m','missing')) {
+            $selected = @($items | Where-Object { $states[[int]$_.N] -ne 'INSTALLED' } | ForEach-Object { [int]$_.N })
+            if ($selected.Count -eq 0) {
+                Write-ConsoleRow 23 'All apps are installed. Use U or menu 33 to check for updates.' ([ConsoleColor]::Green) -MaxWidth 88
+                Start-Sleep -Milliseconds 900
+                continue
+            }
         } else {
             $selected = @()
             $valid = $true
@@ -292,7 +471,7 @@ function Show-PreDownloadSelection {
                 }
             }
             if (-not $valid -or $selected.Count -eq 0) {
-                Write-ConsoleRow 23 '잘못된 번호입니다. 1~16, 범위(1-4), A, 0 또는 Q를 입력하세요.' ([ConsoleColor]::Red) -MaxWidth 88
+                Write-ConsoleRow 23 'Invalid choice. Enter 1-16, a range like 1-4, A, M, U, 0 or Q.' ([ConsoleColor]::Red) -MaxWidth 88
                 Start-Sleep -Milliseconds 900
                 continue
             }
@@ -300,19 +479,24 @@ function Show-PreDownloadSelection {
         $selected = @($selected | Sort-Object -Unique)
         $selectedNames = foreach ($num in $selected) { ($items | Where-Object { $_.N -eq $num } | Select-Object -First 1).Name }
         Write-Host ''
-        Write-Host ('선택됨: ' + ($selectedNames -join ', ')) -ForegroundColor Green
+        Write-Host ('Selected: ' + ($selectedNames -join ', ')) -ForegroundColor Green
         Write-Host ''
-        Write-Host '이제 작업을 선택하세요. I=선택 도구 설치, D=파일 다운로드만, Q=취소.' -ForegroundColor Cyan
-        Write-Host 'I를 선택해도 마지막 확인 문구(INSTALL)를 입력하기 전에는 설치가 시작되지 않습니다.' -ForegroundColor Yellow
-        while ($true) {
-            $action = (Read-Host '작업 선택 [I/D/Q]').Trim().ToLowerInvariant()
-            if ($action -in @('i','d','q')) { break }
-            Write-Host 'I, D 또는 Q 중 하나를 입력하세요.' -ForegroundColor Red
+        if ($presetAction) {
+            $action = $presetAction
+            Write-Host 'Update mode selected. Only apps detected as installed will be offered for upgrade.' -ForegroundColor Cyan
+        } else {
+            Write-Host 'Choose the action: I=install missing selected apps, U=update selected installed apps, D=download package files only, Q=cancel.' -ForegroundColor Cyan
+            Write-Host 'Installed apps are skipped by I. U is the explicit update path.' -ForegroundColor Yellow
+            while ($true) {
+                $action = (Read-Host 'Action [I/U/D/Q]').Trim().ToLowerInvariant()
+                if ($action -in @('i','u','d','q')) { break }
+                Write-Host 'Enter I, U, D or Q.' -ForegroundColor Red
+            }
         }
         if ($action -eq 'q') {
             Clear-PendingToolChoices
             Write-ConsentLog 'User cancelled optional-tool action before any download or install.' 'INFO'
-            Write-Host '취소했습니다. 다운로드나 설치는 시작되지 않았습니다.' -ForegroundColor DarkYellow
+            Write-Host 'Cancelled. No download or installation was started.' -ForegroundColor DarkYellow
             Start-Sleep -Milliseconds 700
             return $false
         }
@@ -323,7 +507,6 @@ function Show-PreDownloadSelection {
         return $true
     }
 }
-
 function Show-ConsentDialog {
     Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
     Add-Type -AssemblyName System.Drawing -ErrorAction Stop
