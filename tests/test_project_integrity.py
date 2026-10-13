@@ -48,7 +48,7 @@ class ProjectIntegrityTests(unittest.TestCase):
 
     def test_consent_catalog_matches_python_catalog(self) -> None:
         source = (ROOT / "consent.ps1").read_text(encoding="utf-8-sig")
-        names = re.findall(r"@\{N=(\d+); Name='([^']+)'\}", source)
+        names = re.findall(r"@\{N=(\d+); Name='([^']+)'(?:;[^}]*)?\}", source)
         self.assertEqual(len(names), 16)
         powershell_names = {int(number): name for number, name in names}
         python_names = {number: entry[0] for number, entry in scan.EXTERNAL_TOOL_CATALOG.items()}
@@ -269,10 +269,29 @@ class ProjectIntegrityTests(unittest.TestCase):
         self.assertIn("Local PCAP Review", guide)
         self.assertIn("SBOM", guide)
 
+    def test_startup_tool_selection_shows_status_skips_ready_apps_and_supports_updates(self) -> None:
+        consent = (ROOT / "consent.ps1").read_text(encoding="utf-8-sig")
+        source = (ROOT / "scan.py").read_text(encoding="utf-8")
+        for feature in (
+            "function Get-OptionalToolStatus",
+            "return 'INSTALLED'",
+            "return 'DOWNLOADED'",
+            "Write-OptionalToolCell",
+            "Start-Sleep -Seconds 3",
+            "Write-PreDownloadSelection 'NONE'",
+            "Green = installed or downloaded",
+            "Action [I/U/D/Q]",
+        ):
+            with self.subTest(feature=feature):
+                self.assertIn(feature, consent)
+        self.assertIn('if action in ("i", "u")', source)
+        self.assertIn('verb = "upgrade" if action == "u" else "install"', source)
+        self.assertIn('if raw in ("i", "d", "u")', source)
+
     def test_consent_catalog_and_loop_are_syntactically_separated(self) -> None:
         source = (ROOT / "consent.ps1").read_text(encoding="utf-8-sig")
         self.assertNotIn(")    while ($true)", source)
-        self.assertRegex(source, r"@\{N=16; Name='Ruff'\}\s*\)\s+while \(\$true\)")
+        self.assertRegex(source, r"@\{N=16; Name='Ruff'; PackageId='astral-sh\.ruff'\}\s*\)\s+while \(\$true\)")
         self.assertRegex(source, r"for \(\$row = 0; \$row -lt 8; \$row\+\+\)\s*\{\s*\$left = \$items\[\$row\]\s*\$right = \$items\[\$row \+ 8\]")
 
     def test_agree_guide_uses_static_scrollable_windows_form_without_console_redraw(self) -> None:

@@ -188,6 +188,17 @@ Collects basic file metadata and hash information and can invoke an optional loc
 
 The 16 optional applications are Nmap, Wireshark/TShark, Sysinternals Suite, OpenSSL Light, Git, Python 3.12, Node.js, 7-Zip, ClamAV, Gitleaks, Trivy, GitHub CLI, Docker Desktop, PowerShell 7, cURL and Ruff. Availability, package IDs and installation behavior depend on the Windows package manager and vendor releases.
 
+### Startup selection status
+
+The startup tool chooser checks for known executable paths, Windows uninstall entries and cached WinGet download folders before asking for a selection. **Green `INSTALLED`** means SCAN detected the application; **green `DOWNLOADED`** means files are already present under `downloads/packages` but does not prove that the application is installed; **gray `MISSING`** means no supported installation or cached package was detected.
+
+- `A` or `M` selects applications not detected as installed. In install mode, SCAN checks again and skips applications already detected as installed.
+- `U` updates only selected apps that SCAN detects as installed by running WinGet's explicit `upgrade` operation.
+- `D` saves package files only. Existing package folders can be reused; a cached download is not the same as an installed app.
+- If every app is detected as installed or already downloaded, the chooser displays its green status for three seconds and proceeds to the main menu. It does not silently install or update anything.
+
+Detection is best-effort: portable apps, non-standard install paths, or manually moved files may not appear in the same way across systems. Use menu 33 to refresh status and manage individual packages.
+
 Suggested minimal combinations:
 - Website metadata: no optional app is required for the basic workflow; cURL/OpenSSL support the cross-check.
 - Project audit: Git + Gitleaks + Trivy.

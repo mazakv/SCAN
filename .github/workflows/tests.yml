@@ -19,6 +19,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Parse PowerShell modules
+        shell: pwsh
+        run: |
+          $files = @('consent.ps1', 'bootstrap.ps1', 'validate_scripts.ps1')
+          foreach ($file in $files) {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file).Path, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              Write-Host "PowerShell parse errors in $file"
+              $parseErrors | ForEach-Object {
+                Write-Host ("Line {0}, column {1}: {2}" -f $_.Extent.StartLineNumber, $_.Extent.StartColumnNumber, $_.Message)
+              }
+              exit 1
+            }
+            Write-Host "PowerShell syntax OK: $file"
+          }
       - name: Compile Python modules
         run: python -W error -m py_compile scan.py site_audit.py security_analysis.py security_audit.py
       - name: Run catalog and behavior tests
