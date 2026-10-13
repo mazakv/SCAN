@@ -1294,8 +1294,8 @@ def tshark_capture_review_tool() -> None:
     print(paint("Packet captures can contain private IPs, DNS names, and unencrypted content. Reports stay on this PC.",YELLOW))
     if not _ask_yes("Create a read-only protocol summary? Type YES: "): print("Cancelled."); pause(); return
     steps=[]
-    steps.append(_run_cli_step("TShark protocol hierarchy",tshark,["-r",str(Path(raw).expanduser().absolute()),"-q","-z","io,phs"],timeout=300))
-    steps.append(_run_cli_step("TShark conversation statistics",tshark,["-r",str(Path(raw).expanduser().absolute()),"-q","-z","conv,tcp"],timeout=300))
+    steps.append(_run_cli_step("TShark protocol hierarchy",tshark,["-r",str(capture),"-q","-z","io,phs"],timeout=300))
+    steps.append(_run_cli_step("TShark conversation statistics",tshark,["-r",str(capture),"-q","-z","conv,tcp"],timeout=300))
     txt,json_path=_composite_report("LOCAL_PACKET_CAPTURE_REVIEW",capture.name,steps,[
         "Local file only; no live capture or network transmission was started.",
         f"Input size: {size} bytes. Capture contents may be sensitive; do not publish the reports.",
