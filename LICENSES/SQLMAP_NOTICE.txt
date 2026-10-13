@@ -1,0 +1,8 @@
+sqlmap is not bundled with the SCAN v12 release ZIP. It is downloaded only when the user
+chooses the sqlmap menu item and confirms the download. Upstream states that sqlmap is
+licensed under GNU GPL version 2 or later, subject to clarifications and exceptions in
+its LICENSE file. Preserve upstream LICENSE and doc/THIRD-PARTY.md with the downloaded
+source; those notices take precedence for the sqlmap source.
+
+Official license: https://github.com/sqlmapproject/sqlmap/blob/master/LICENSE
+Official repository: https://github.com/sqlmapproject/sqlmap

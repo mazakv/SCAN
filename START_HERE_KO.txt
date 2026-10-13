@@ -1,0 +1,12 @@
+﻿SCAN Rainbow Defense Toolkit v20 시작하기
+
+1. ZIP 전체를 압축 해제합니다.
+2. SCAN.bat를 실행합니다.
+3. 개인정보·안전 안내와 CONSENT_AND_LICENSES.txt에 포함된 라이선스 전문을 스크롤하여 읽습니다.
+4. 동의하면 확인란 체크 후 AGREE / 동의를 누릅니다. 동의하지 않으면 거부 / 종료를 누릅니다.
+5. 필요한 선택 앱만 설치/다운로드합니다.
+6. 메인 메뉴에서 번호를 입력합니다. 세트 46~48은 WORKFLOW SETS 섹션에 따로 표시됩니다.
+
+다국어 설명서: docs 폴더. 전체 설명: README.md.
+GitHub: https://github.com/mazakv/SCAN
+로그/보고서에는 개인정보가 포함될 수 있으므로 공개 저장소에 올리지 마세요.

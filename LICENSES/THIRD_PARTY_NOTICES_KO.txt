@@ -1,0 +1,91 @@
+﻿SCAN v19 — 선택 도구의 공식 출처 및 라이선스 확인 안내
+=====================================================
+
+SCAN 코드 자체는 루트 LICENSE의 GPL-3.0-or-later를 사용합니다. 아래 프로그램은 별도 라이선스/약관을 가지며 설치/재배포 전에 공급자의 최신 조건을 확인해야 합니다. 설치 프로그램이나 바이너리는 SCAN ZIP에 포함하지 않습니다.
+
+01. Nmap
+    WinGet ID: Insecure.Nmap
+    공식 출처/약관 확인: https://nmap.org/download.html
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+02. Wireshark
+    WinGet ID: WiresharkFoundation.Wireshark
+    공식 출처/약관 확인: https://www.wireshark.org/download.html
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+03. Sysinternals Suite
+    WinGet ID: Microsoft.Sysinternals.Suite
+    공식 출처/약관 확인: https://learn.microsoft.com/sysinternals/
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+04. OpenSSL Light
+    WinGet ID: ShiningLight.OpenSSL.Light
+    공식 출처/약관 확인: https://slproweb.com/products/Win32OpenSSL.html
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+05. Git
+    WinGet ID: Git.Git
+    공식 출처/약관 확인: https://git-scm.com/download/win
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+06. Python 3.12
+    WinGet ID: Python.Python.3.12
+    공식 출처/약관 확인: https://www.python.org/downloads/windows/
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+07. Node.js
+    WinGet ID: OpenJS.NodeJS
+    공식 출처/약관 확인: https://nodejs.org/en/download
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+08. 7-Zip
+    WinGet ID: 7zip.7zip
+    공식 출처/약관 확인: https://www.7-zip.org/
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+09. ClamAV
+    WinGet ID: Cisco.ClamAV
+    공식 출처/약관 확인: https://www.clamav.net/downloads
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+10. Gitleaks
+    WinGet ID: Gitleaks.Gitleaks
+    공식 출처/약관 확인: https://github.com/gitleaks/gitleaks
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+11. Trivy
+    WinGet ID: AquaSecurity.Trivy
+    공식 출처/약관 확인: https://github.com/aquasecurity/trivy
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+12. GitHub CLI
+    WinGet ID: GitHub.cli
+    공식 출처/약관 확인: https://cli.github.com/
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+13. Docker Desktop
+    WinGet ID: Docker.DockerDesktop
+    공식 출처/약관 확인: https://www.docker.com/products/docker-desktop/
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+14. PowerShell 7
+    WinGet ID: Microsoft.PowerShell
+    공식 출처/약관 확인: https://github.com/PowerShell/PowerShell
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+15. cURL
+    WinGet ID: cURL.cURL
+    공식 출처/약관 확인: https://curl.se/windows/
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+16. Ruff
+    WinGet ID: astral-sh.ruff
+    공식 출처/약관 확인: https://docs.astral.sh/ruff/
+    비고: SCAN과 독립된 소프트웨어이며 별도 라이선스/약관이 적용됩니다.
+
+특별 참고
+---------
+- Sysinternals Suite: 별도 EULA가 적용됩니다. SCAN은 EULA를 자동 수락하지 않습니다.
+- Docker Desktop: Docker의 상업적 사용 조건을 확인하십시오.
+- OpenSSL, Python, Node.js, cURL 및 기타 앱에는 별도 라이선스와 종속 구성요소가 있을 수 있습니다. 공급자의 공식 문서가 우선합니다.
+- SCAN은 필요하지 않은 앱을 자동 설치하지 않습니다. 각 앱은 사용자가 선택합니다.

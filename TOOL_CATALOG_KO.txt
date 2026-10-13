@@ -1,0 +1,105 @@
+SCAN RAINBOW DEFENSE TOOLKIT v20 — CURATED TOOL CATALOG
+============================================================
+60개 내장 메뉴 항목 + 16개 선택 앱 = 총 76개 메뉴 항목입니다.
+SCAN에서 직접 활용하지 않던 OWASP ZAP과 KeePassXC를 선택 목록에서 제외했습니다.
+선택 앱 ID 1~16은 메인 메뉴 61~76에 표시됩니다. 메뉴 33에서 선택 설치를 엽니다.
+설치(I)와 다운로드(D)는 별도 동작입니다. 다운로드만으로는 실행 메뉴 잠금이 풀리지 않습니다.
+통합 작업은 35~45입니다. 없는 도구는 미설치/건너뜀으로 보고서에 표시합니다.
+
+[01 | 메인 메뉴 61] Nmap
+  WinGet ID: Insecure.Nmap
+  용도: Bounded local/private-host service inventory
+  공식 출처: https://nmap.org/download.html
+
+[02 | 메인 메뉴 62] Wireshark
+  WinGet ID: WiresharkFoundation.Wireshark
+  용도: TShark packet-capture summaries for local files
+  공식 출처: https://www.wireshark.org/download.html
+
+[03 | 메인 메뉴 63] Sysinternals Suite
+  WinGet ID: Microsoft.Sysinternals.Suite
+  용도: Autoruns/Sigcheck/Process Explorer host diagnostics
+  공식 출처: https://learn.microsoft.com/sysinternals/
+
+[04 | 메인 메뉴 64] OpenSSL Light
+  WinGet ID: ShiningLight.OpenSSL.Light
+  용도: TLS certificate cross-check
+  공식 출처: https://slproweb.com/products/Win32OpenSSL.html
+
+[05 | 메인 메뉴 65] Git
+  WinGet ID: Git.Git
+  용도: Repository hygiene and tracked-file checks
+  공식 출처: https://git-scm.com/download/win
+
+[06 | 메인 메뉴 66] Python 3.12
+  WinGet ID: Python.Python.3.12
+  용도: Compatibility runtime for local tools
+  공식 출처: https://www.python.org/downloads/windows/
+
+[07 | 메인 메뉴 67] Node.js
+  WinGet ID: OpenJS.NodeJS
+  용도: Read-only JavaScript syntax checks
+  공식 출처: https://nodejs.org/en/download
+
+[08 | 메인 메뉴 68] 7-Zip
+  WinGet ID: 7zip.7zip
+  용도: Archive integrity testing without extraction
+  공식 출처: https://www.7-zip.org/
+
+[09 | 메인 메뉴 69] ClamAV
+  WinGet ID: Cisco.ClamAV
+  용도: On-demand local file and folder malware scan
+  공식 출처: https://www.clamav.net/downloads
+
+[10 | 메인 메뉴 70] Gitleaks
+  WinGet ID: Gitleaks.Gitleaks
+  용도: Redacted secret scanning for local project files
+  공식 출처: https://github.com/gitleaks/gitleaks
+
+[11 | 메인 메뉴 71] Trivy
+  WinGet ID: AquaSecurity.Trivy
+  용도: Dependency/config/container/SBOM scanning
+  공식 출처: https://github.com/aquasecurity/trivy
+
+[12 | 메인 메뉴 72] GitHub CLI
+  WinGet ID: GitHub.cli
+  용도: Optional GitHub repository metadata check
+  공식 출처: https://cli.github.com/
+
+[13 | 메인 메뉴 73] Docker Desktop
+  WinGet ID: Docker.DockerDesktop
+  용도: Local container/image inventory and Trivy image audit
+  공식 출처: https://www.docker.com/products/docker-desktop/
+
+[14 | 메인 메뉴 74] PowerShell 7
+  WinGet ID: Microsoft.PowerShell
+  용도: Local Windows host-health snapshot
+  공식 출처: https://github.com/PowerShell/PowerShell
+
+[15 | 메인 메뉴 75] cURL
+  WinGet ID: cURL.cURL
+  용도: HTTP/TLS header cross-check without redirect following
+  공식 출처: https://curl.se/windows/
+
+[16 | 메인 메뉴 76] Ruff
+  WinGet ID: astral-sh.ruff
+  용도: Read-only Python lint checks
+  공식 출처: https://docs.astral.sh/ruff/
+
+
+[추가 세트 및 개별 도구 — v20]
+46 SET: WINDOWS BASELINE — Windows OS, Defender, 방화벽, 수신 대기 포트 읽기 전용 요약
+47 SET: PROJECT RELEASE READINESS — Python 문법, Git 상태, 설치된 경우 Gitleaks
+48 SET: FILE TRIAGE — 파일 해시/정적 분석, 설치된 경우 ClamAV
+49 DUPLICATE FILE FINDER — SHA-256 기반 중복 파일 탐지, 삭제 없음
+50 LARGE FILE INVENTORY — 지정 크기 이상의 파일 목록
+51 JSON VALIDATOR — JSON 파싱 및 구조 요약
+52 XML VALIDATOR — XML 구문 검사
+53 CSV STRUCTURE CHECK — CSV 헤더/열 개수 분포 검사
+54 FILE ENTROPY ESTIMATE — 최대 1 MiB 샘플 엔트로피 추정
+55 PEM CERTIFICATE INSPECTOR — PEM 인증서 블록 및 DER SHA-256 검사
+56 WINDOWS EVENT LOG SUMMARY — 최근 24시간 System/Application 경고·오류 요약
+57 SCHEDULED TASK INVENTORY — 예약 작업 메타데이터 읽기 전용 목록
+58 SECRET FILENAME HYGIENE — 비밀정보와 유사한 파일명만 검사, 파일 내용은 읽지 않음
+59 IPV4 SUBNET CALCULATOR — IPv4/CIDR 네트워크 계산
+60 SCAN LOG ANALYZER — SCAN 로컬 로그에서 오류 후보 요약

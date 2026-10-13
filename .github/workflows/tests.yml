@@ -1,0 +1,25 @@
+name: SCAN project checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python-checks:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12', '3.13', '3.14']
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile Python modules
+        run: python -W error -m py_compile scan.py site_audit.py security_analysis.py security_audit.py
+      - name: Run catalog and behavior tests
+        run: python -m unittest discover -s tests -v

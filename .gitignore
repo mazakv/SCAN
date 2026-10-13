@@ -1,0 +1,46 @@
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Runtime downloads, installers, extracted third-party source
+/downloads/
+/tools/sqlmap/
+/tools/sqlmap-master/
+/sqlmap/
+*.msi
+*.exe
+*.zip
+*.7z
+*.tar.gz
+
+# Local logs and status can contain Windows usernames, paths and installed software
+/Logs/*.log
+/Logs/*.csv
+/Logs/installed_packages.json
+/Logs/pending_*.txt
+/Logs/winget_install_*.log
+/Logs/reports/*
+!/Logs/reports/README.txt
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+secrets.*
+credentials.*
+
+# Editors and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# User-facing Windows launch/publisher scripts are distributed separately, never committed
+*.bat
