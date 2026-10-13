@@ -1,0 +1,67 @@
+SCAN optional tool catalog
+Installed status is rechecked on the startup screen/tool center. Windows uses WinGet.
+
+
+[01 | menu 74] Nmap
+  WinGet ID: Insecure.Nmap
+  Bounded local/private network service checks
+
+[02 | menu 75] Wireshark
+  WinGet ID: WiresharkFoundation.Wireshark
+  Local packet-file summaries (TShark)
+
+[03 | menu 76] Sysinternals Suite
+  WinGet ID: Microsoft.Sysinternals.Suite
+  Windows diagnostic utilities
+
+[04 | menu 77] OpenSSL Light
+  WinGet ID: ShiningLight.OpenSSL.Light
+  TLS certificate cross-checks
+
+[05 | menu 78] Git
+  WinGet ID: Git.Git
+  Repository status and change checks
+
+[06 | menu 79] Python 3.12
+  WinGet ID: Python.Python.3.12
+  Compatibility runtime for selected local tools
+
+[07 | menu 80] Node.js
+  WinGet ID: OpenJS.NodeJS
+  JavaScript syntax checks
+
+[08 | menu 81] 7-Zip
+  WinGet ID: 7zip.7zip
+  Archive integrity checks
+
+[09 | menu 82] ClamAV
+  WinGet ID: Cisco.ClamAV
+  Local file scanning
+
+[10 | menu 83] Gitleaks
+  WinGet ID: Gitleaks.Gitleaks
+  Secret detection with redacted reports
+
+[11 | menu 84] Trivy
+  WinGet ID: AquaSecurity.Trivy
+  Dependency/config/container/SBOM checks
+
+[12 | menu 85] GitHub CLI
+  WinGet ID: GitHub.cli
+  Optional GitHub repository checks
+
+[13 | menu 86] Docker Desktop
+  WinGet ID: Docker.DockerDesktop
+  Local container checks
+
+[14 | menu 87] PowerShell 7
+  WinGet ID: Microsoft.PowerShell
+  Windows host-health snapshots
+
+[15 | menu 88] cURL
+  WinGet ID: cURL.cURL
+  HTTP/TLS header cross-checks
+
+[16 | menu 89] Ruff
+  WinGet ID: astral-sh.ruff
+  Static Python code-quality checks

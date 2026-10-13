@@ -1,0 +1,17 @@
+SCAN STARTUP NOTICE
+============================================================
+
+PURPOSE
+SCAN is a defensive triage toolkit for local system, file, project, and bounded public-metadata checks. It is not a security certification, antivirus replacement, professional incident-response service, or legal advice.
+
+AUTHORIZED USE
+Check only devices, files, accounts, repositories, and networks you own or are explicitly authorized to assess. A clean result is not proof of safety; false positives and missed findings are possible. Do not disable security protections.
+
+LIMITS AND SAFETY
+Python 3.10 or newer is required. Some integrated workflows depend on optional tools or network access. Menu availability varies by operating system. A clean result is not proof of safety.
+
+PRIVACY
+Reports and logs may include usernames, local paths, hostnames, IP addresses, software inventories, or project metadata. Review and redact them before sharing. Optional AI report review sends data to an external API only after you inspect the preview and type UPLOAD.
+
+LICENSE FILES
+SCAN is licensed under GNU GPL v3 or later. Full license texts and third-party notices are in LICENSE and LICENSES/. Bundled third-party tools may have separate terms.

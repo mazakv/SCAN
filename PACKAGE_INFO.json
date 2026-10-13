@@ -1,0 +1,9 @@
+{
+  "version": "v22.1.0",
+  "platform": "Windows",
+  "locale": "EN",
+  "language": "English",
+  "license": "GPL-3.0-or-later",
+  "source_package": "SCAN_Rainbow_Defense_Tool_v22_Windows.zip",
+  "limits": "Most menu actions use shared Python code, while OS-specific features only work on their supported platform. Windows-only PowerShell/WinGet functions are not available on Termux, Linux, or macOS."
+}

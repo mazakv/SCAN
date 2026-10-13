@@ -1,0 +1,7 @@
+SCAN v22.1.0
+Platform: Windows
+Language: English
+
+SCAN is a defensive triage toolkit for local system, file, project, and bounded public-metadata checks. It is not a security certification, antivirus replacement, professional incident-response service, or legal advice.
+
+Most menu actions use shared Python code, while OS-specific features only work on their supported platform. Windows-only PowerShell/WinGet functions are not available on Termux, Linux, or macOS.
