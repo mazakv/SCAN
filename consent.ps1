@@ -416,7 +416,7 @@ function Show-PreDownloadSelection {
         Write-ConsoleRow 20 'A/M = select all tools not installed (cached downloads are shown in green).' ([ConsoleColor]::Yellow) -MaxWidth 88
         Write-ConsoleRow 21 'U = select installed apps for update. Explicit numbers can be followed by I, U or D.' ([ConsoleColor]::Yellow) -MaxWidth 88
         Write-ConsoleRow 22 'L = catalog  |  0 = skip  |  Q = cancel' ([ConsoleColor]::Yellow) -MaxWidth 88
-        try { [Console]::SetCursorPosition(0, 24); [Console]::Write((' ' * ([Math]::Max(50, [Console]::WindowWidth) - 1)); [Console]::SetCursorPosition(0, 24) } catch {}
+        try { [Console]::SetCursorPosition(0, 24); [Console]::Write((' ' * ([Math]::Max(50, [Console]::WindowWidth) - 1))); [Console]::SetCursorPosition(0, 24) } catch {}
         $raw = (Read-Host 'Tool numbers / ranges / A / M / U / L / 0 / Q').Trim().ToLowerInvariant()
 
         if ($raw -eq 'q') {
