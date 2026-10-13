@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div align="center">
 
 # 🌈 SCAN Rainbow Defense Toolkit
@@ -286,3 +287,5 @@ SCAN is provided “as is,” without warranties of any kind to the maximum exte
 ---
 
 **Language note:** English is the primary reference for technical behavior. Translated guides are provided for accessibility; if a translation differs in meaning, consult the English guide and the original license files.
+=======
+>>>>>>> origin/main
