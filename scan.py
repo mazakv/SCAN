@@ -3411,7 +3411,7 @@ def tool_install_center(initial_selected: list[int] | None = None, initial_actio
     print("  [U] UPDATE selected applications that are already installed")
     print("  [D] DOWNLOAD installer files only — does not install or unlock the menu")
     print("  [0] Cancel")
-    print(paint("  참고: I는 실제 설치, D는 파일만 저장합니다. D로는 메뉴 잠금이 풀리지 않습니다.", YELLOW))
+    print(paint("  I=install and skip detected apps, U=upgrade installed apps, D=save package files only.", YELLOW))
     if initial_action in ("i", "d", "u") and initial_selected:
         action = initial_action
         print(paint(f"\nStartup selection retained: {action.upper()} selected before the first download.", CYAN + BOLD))
