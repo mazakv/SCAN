@@ -48,7 +48,7 @@ class ProjectIntegrityTests(unittest.TestCase):
 
     def test_consent_catalog_matches_python_catalog(self) -> None:
         source = (ROOT / "consent.ps1").read_text(encoding="utf-8-sig")
-        names = re.findall(r"@\{N=(\d+); Name='([^']+)'\}", source)
+        names = re.findall(r"@\{N=(\d+); Name='([^']+)'(?:;[^}]*)?\}", source)
         self.assertEqual(len(names), 16)
         powershell_names = {int(number): name for number, name in names}
         python_names = {number: entry[0] for number, entry in scan.EXTERNAL_TOOL_CATALOG.items()}
