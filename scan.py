@@ -3301,7 +3301,7 @@ def external_tool_manager() -> None:
     pause()
 
 def tool_install_center(initial_selected: list[int] | None = None, initial_action: str | None = None) -> None:
-    """Install or download packages chosen at startup or in this menu."""
+    """Install, update installed apps, or download packages chosen at startup or in this menu."""
     ensure_log_files()
     clear_screen()
     print(paint("SCAN / TOOL DOWNLOAD + INSTALL CENTER — 16 CURATED APPS (v20)", CYAN + BOLD))
@@ -3407,7 +3407,8 @@ def tool_install_center(initial_selected: list[int] | None = None, initial_actio
     print("\nChoose an action:")
     if len(selected) >= 20:
         print(paint(f"WARNING: You selected {len(selected)} applications. This can require multiple GB of downloads and considerable time. It is okay to cancel and install smaller groups.", YELLOW + BOLD))
-    print("  [I] INSTALL selected applications via WinGet — they can become available in the menu")
+    print("  [I] INSTALL selected missing applications via WinGet")
+    print("  [U] UPDATE selected applications that are already installed")
     print("  [D] DOWNLOAD installer files only — does not install or unlock the menu")
     print("  [0] Cancel")
     print(paint("  참고: I는 실제 설치, D는 파일만 저장합니다. D로는 메뉴 잠금이 풀리지 않습니다.", YELLOW))
@@ -3415,18 +3416,48 @@ def tool_install_center(initial_selected: list[int] | None = None, initial_actio
         action = initial_action
         print(paint(f"\nStartup selection retained: {action.upper()} selected before the first download.", CYAN + BOLD))
     else:
-        action = input("Action [I/D/0]: ").strip().lower()
+        action = input("Action [I/U/D/0]: ").strip().lower()
     if action in ("0", "q", "cancel", ""):
         print("Cancelled. No package action was started.")
         show_download_warning("취소됨: 다운로드/설치가 시작되지 않았습니다. 선택 도구는 설치 전까지 잠겨 있습니다.")
         pause()
         return
-    if action not in ("d", "i"):
+    if action not in ("d", "i", "u"):
         print("Invalid action.")
         show_download_warning("잘못된 선택입니다. 다운로드/설치를 시작하지 않았습니다.")
         pause()
         return
-    action_name = "DOWNLOAD_ONLY" if action == "d" else "INSTALL"
+
+    # Installing should never re-run installers for tools SCAN already detects.
+    # Updating is a separate, explicit action and only targets currently installed apps.
+    if action in ("i", "u"):
+        detected_states = {number: external_tool_status(number)[1] for number in selected}
+        if action == "i":
+            skipped = [number for number in selected if detected_states[number] == "INSTALLED"]
+            selected = [number for number in selected if detected_states[number] != "INSTALLED"]
+            if skipped:
+                print(paint("\nAlready installed — skipping these apps:", GREEN + BOLD))
+                for number in skipped:
+                    print(f"  [SKIP] {EXTERNAL_TOOL_CATALOG[number][0]}")
+        else:
+            skipped = [number for number in selected if detected_states[number] != "INSTALLED"]
+            selected = [number for number in selected if detected_states[number] == "INSTALLED"]
+            if skipped:
+                print(paint("\nNot detected as installed — excluding from update:", YELLOW + BOLD))
+                for number in skipped:
+                    print(f"  [SKIP] {EXTERNAL_TOOL_CATALOG[number][0]}")
+        if not selected:
+            if action == "i":
+                print(paint("\nEvery selected application is already installed. Use U to check for updates.", GREEN + BOLD))
+            else:
+                print(paint("\nNo selected application was detected as installed. Nothing will be upgraded.", YELLOW + BOLD))
+            pause()
+            return
+        print("\nPackages that will be processed:")
+        for number in selected:
+            print(f"  [{number:02d}] {EXTERNAL_TOOL_CATALOG[number][0]}")
+
+    action_name = "DOWNLOAD_ONLY" if action == "d" else ("UPDATE" if action == "u" else "INSTALL")
     print("\nThe source package license is not auto-accepted. If WinGet asks for agreement, read it and respond in the console.")
     print("The progress bar tracks completed package tasks. Exact file sizes are measured in download-only mode.")
     skip_existing = False
@@ -3492,16 +3523,34 @@ def tool_install_center(initial_selected: list[int] | None = None, initial_actio
             print(f"  New/changed files: {_mib(new_bytes)} | Total saved: {_mib(total_bytes)} | File count: {len(after)}")
             print(f"  Destination: {package_folder}")
         else:
-            install_log = LOG_DIR / f"winget_install_{slug}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-            command = ["winget", "install", "--id", package_id, "--exact", "--source", "winget",
+            action_label = "UPDATE" if action == "u" else "INSTALL"
+            log_action = "UPDATE" if action == "u" else "INSTALL"
+            log_stem = "winget_update" if action == "u" else "winget_install"
+            install_log = LOG_DIR / f"{log_stem}_{slug}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+            verb = "upgrade" if action == "u" else "install"
+            command = ["winget", verb, "--id", package_id, "--exact", "--source", "winget",
                        "--verbose-logs", "--log", str(install_log)]
-            rc, output_lines = _run_winget_dashboard(command, "INSTALL", name, index, len(selected), completed, None)
+            rc, output_lines = _run_winget_dashboard(command, action_label, name, index, len(selected), completed, None)
             after = _directory_snapshot(package_folder)
             total_bytes = sum(size for size, _mtime in after.values())
             confirmed = winget_confirms_installed(package_id, force=True)
             exe_after = find_installed_external_tool(number) is not None
             registry_after = _registry_confirms_installed(number, force=True)
-            if confirmed or exe_after or registry_after:
+            if action == "u":
+                still_installed = confirmed or exe_after or registry_after
+                if rc == 0 and still_installed:
+                    status = "UPDATED_OR_CURRENT"
+                    okay = True
+                    detail_status = "WinGet upgrade completed; installed state confirmed (a newer version may not have been available)"
+                elif rc == 0:
+                    status = "UPDATE_EXIT_0_PENDING_REFRESH"
+                    okay = True
+                    detail_status = "WinGet reported success; installed inventory may need refresh"
+                else:
+                    status = "UPDATE_FAILED_INSTALLED_REMAINS" if still_installed else "UPDATE_FAILED"
+                    okay = False
+                    detail_status = f"WinGet upgrade exit={rc}; installed state remains={still_installed}"
+            elif confirmed or exe_after or registry_after:
                 status = "INSTALLED_CONFIRMED"
                 okay = True
                 detail_status = "installed state confirmed by WinGet, executable path, or Windows uninstall registry"
@@ -3516,24 +3565,24 @@ def tool_install_center(initial_selected: list[int] | None = None, initial_actio
                 okay = False
                 detail_status = f"WinGet exit={rc}; package not confirmed in installed inventory"
                 _remove_install_state(package_id)
-            details = f"WinGet exit={rc}; confirmation={detail_status}; install log={install_log}; installer transfer size is not reliably exposed in install mode"
-            outcomes.append((name, okay, f"{status}; {detail_status}; install-log={install_log.name}"))
-            append_download_csv(name, package_id, "INSTALL", status, None, total_bytes if total_bytes else None,
+            details = f"WinGet {verb} exit={rc}; confirmation={detail_status}; log={install_log}; installer transfer size is not reliably exposed in {action_label.lower()} mode"
+            outcomes.append((name, okay, f"{status}; {detail_status}; log={install_log.name}"))
+            append_download_csv(name, package_id, log_action, status, None, total_bytes if total_bytes else None,
                                 "", details)
-            log_event("PACKAGE_INSTALL", status, f"{name} | exit={rc} | confirmed={confirmed} | {install_log}")
+            log_event(f"PACKAGE_{log_action}", status, f"{name} | exit={rc} | confirmed={confirmed} | {install_log}")
             completed += 1
             install_success = okay
             print("\n" + paint(f"[{index}/{len(selected)}] {name}: {status}", GREEN if install_success else YELLOW))
             if confirmed or exe_after or registry_after:
                 inventory_label = "CONFIRMED"
             elif rc == 0:
-                inventory_label = "PENDING REFRESH — WinGet reported successful installation"
+                inventory_label = "PENDING REFRESH — WinGet reported success"
             else:
-                inventory_label = "NOT CONFIRMED — installation may have failed"
+                inventory_label = "NOT CONFIRMED — review the log"
             print(f"  Installed-state check: {inventory_label}")
             print(f"  Menu availability: {'INSTALLED' if install_success else 'LOCKED — install not confirmed'}")
-            print("  Exact download MB: WinGet install mode does not reliably report it; choose D mode for measured saved file sizes.")
-            print(f"  Installer log: {install_log}")
+            print(f"  Exact download MB: WinGet {action_label.lower()} mode does not reliably report it; choose D mode for measured saved file sizes.")
+            print(f"  Operation log: {install_log}")
 
     print("\n" + paint("TRANSFER / INSTALL SUMMARY", CYAN + BOLD))
     for name, succeeded, details in outcomes:
@@ -3543,8 +3592,11 @@ def tool_install_center(initial_selected: list[int] | None = None, initial_actio
     if action == "d":
         show_download_warning("다운로드 완료는 설치 완료가 아닙니다. 실제 사용하려면 메뉴 33에서 I(설치)를 선택해야 합니다.")
         print("Downloaded installer files remain locked until installed.")
+    elif action == "u":
+        print("\nUpdate check finished. Success means WinGet completed and the package remains detectable.")
+        print("Review each package result and its operation log above.")
     else:
-        print("\nInstalled status is checked with both executable paths and WinGet's package inventory.")
+        print("\nInstalled status is checked with executable paths and WinGet's package inventory.")
         print("If a tool was installed outside SCAN, press R on the final page to refresh its status.")
     log_event("TOOL_CENTER_FINISH", "INFO", f"action={action_name}; selected={len(selected)}; completed={len(outcomes)}")
     pause()
@@ -3601,7 +3653,7 @@ def _consume_pending_tool_action() -> str | None:
         pending.unlink(missing_ok=True)
     except OSError:
         pass
-    if raw in ("i", "d"):
+    if raw in ("i", "d", "u"):
         return raw
     log_event("PENDING_ACTION_INVALID", "WARN", f"invalid startup action: {raw!r}")
     return None
