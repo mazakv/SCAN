@@ -42,5 +42,6 @@ credentials.*
 .DS_Store
 Thumbs.db
 
-# User-facing Windows launch/publisher scripts are distributed separately, never committed
+# Publish the main launcher required by source users and CI; keep publisher helpers private.
 *.bat
+!SCAN.bat
