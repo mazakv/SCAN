@@ -319,7 +319,7 @@ function Get-OptionalToolStatus([hashtable]$Item) {
     }
 
     # A saved WinGet package folder means files were downloaded, not necessarily installed.
-    $packagesRoot = Join-Path (Join-Path (Join-Path $PSScriptRoot 'downloads') 'packages') ''
+    $packagesRoot = Join-Path $PSScriptRoot 'downloads\packages'
     $slug = $packageId -replace '[^A-Za-z0-9._-]+', '_'
     $packageFolder = Join-Path $packagesRoot $slug
     if (Test-Path -LiteralPath $packageFolder -PathType Container) {
