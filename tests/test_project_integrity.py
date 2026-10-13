@@ -213,7 +213,9 @@ class ProjectIntegrityTests(unittest.TestCase):
             self.assertEqual(run_step.call_count, 2)
             first_args = run_step.call_args_list[0].args
             self.assertIn("-r", first_args[2])
-            self.assertIn(str(capture), first_args[2])
+            read_path = Path(first_args[2][first_args[2].index("-r") + 1])
+            # Windows may resolve a short 8.3 temporary path to its long-name alias.
+            self.assertEqual(read_path.resolve(), capture.resolve())
             self.assertNotIn("-i", first_args[2], "workflow must read a file, not start a live capture")
 
     def test_sbom_workflow_invokes_trivy_and_never_requests_db_update(self) -> None:
