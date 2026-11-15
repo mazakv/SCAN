@@ -24,7 +24,16 @@ call git add .
 call git commit -m "%commit_msg%"
 
 echo.
-echo [3/3] Pushing to GitHub (main)...
+echo [3/3] Pulling latest changes from GitHub...
+call git pull origin main --rebase
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Git pull failed. Please resolve conflicts manually.
+    goto error_end
+)
+
+echo.
+echo [4/3] Pushing to GitHub (main)...
 call git push origin main
 if %errorlevel% neq 0 (
     echo.
