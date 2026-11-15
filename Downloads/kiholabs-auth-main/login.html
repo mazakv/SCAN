@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A2A3C">
+<title>로그인 - Kiho Labs</title>
+
+<script>
+/* 안전장치: 아래 메인 스크립트에 문제가 생겨도 폼이 주소창(GET)으로 전송되어
+   아이디와 비밀번호가 노출되는 일이 없도록 모든 submit 기본 동작을 막습니다. */
+document.addEventListener('submit', function (e) { e.preventDefault(); }, true);
+</script>
+
+<!-- Pretendard: 무료 오픈소스 한글 폰트. 불러오지 못해도 시스템 폰트로 대체됩니다. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+<style>
+  /* Tokens */
+  :root {
+    --bg: #0A2A3C;
+    --ink: #F2F8FB;
+    --ink-soft: #B9CDD8;
+    --ink-faint: #8FAAB8;
+    --mint: #6FF2E0;
+    --mint-ink: #062230;
+    --danger: #FFA3B0;
+    --ok: #9BF7CC;
+    --edge: rgba(255, 255, 255, .18);
+    --field-bg: rgba(255, 255, 255, .07);
+    --field-edge: rgba(255, 255, 255, .18);
+    --r-card: 28px;
+    --r-ctrl: 14px;
+    --ease: cubic-bezier(.3, .8, .2, 1);
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: linear-gradient(160deg, #0C3549 0%, #0A2A3C 48%, #071F2E 100%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+                 "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+
+  /* Layout */
+  .page {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 28px 16px;
+    overflow: hidden;
+    overflow: clip;
+  }
+
+  .stage { position: relative; width: min(456px, 100%); }
+
+  .brand {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 4px 18px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+  .brand svg { width: 30px; height: 30px; }
+
+  /* Background orbs sit behind the glass so the blur has something to refract */
+  .orbs { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate3d(calc(var(--px, 0) * var(--d) * 1px), calc(var(--py, 0) * var(--d) * 1px), 0);
+    transition: transform .9s cubic-bezier(.2, .7, .2, 1);
+  }
+  .orb--mint {
+    --d: -46;
+    width: 440px; height: 440px; left: -210px; top: -60px;
+    background: radial-gradient(circle, rgba(34, 211, 197, .85), rgba(34, 211, 197, 0) 68%);
+  }
+  .orb--cobalt {
+    --d: 60;
+    width: 560px; height: 560px; right: -280px; bottom: -230px;
+    background: radial-gradient(circle, rgba(99, 112, 255, .95), rgba(99, 112, 255, 0) 68%);
+  }
+  .orb--coral {
+    --d: -28;
+    width: 280px; height: 280px; left: 8%; bottom: -130px;
+    background: radial-gradient(circle, rgba(255, 122, 144, .85), rgba(255, 122, 144, 0) 68%);
+  }
+
+  /* Glass card */
+  .card {
+    position: relative;
+    z-index: 1;
+    padding: 28px;
+    border-radius: var(--r-card);
+    background: linear-gradient(160deg, rgba(255, 255, 255, .15), rgba(255, 255, 255, .05));
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    backdrop-filter: blur(26px) saturate(150%);
+    box-shadow: 0 30px 60px -20px rgba(2, 12, 20, .55), inset 0 1px 0 rgba(255, 255, 255, .25);
+    animation: rise .7s var(--ease) both;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(140deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, .06) 35%, rgba(255, 255, 255, .02) 60%, rgba(255, 255, 255, .3));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .card { background: rgba(16, 54, 74, .94); }
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  .card-body { transition: height .38s var(--ease); }
+  .card-body.is-morphing { overflow: hidden; }
+
+  /* Tabs */
+  .tabs {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .07);
+    border: 1px solid var(--edge);
+  }
+  .tabs-thumb {
+    position: absolute;
+    top: 4px; bottom: 4px; left: 4px;
+    width: calc(50% - 4px);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .17);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 4px 14px rgba(0, 0, 0, .18);
+    transition: transform .38s var(--ease);
+  }
+  .tabs[data-active="register"] .tabs-thumb { transform: translateX(100%); }
+  .tab {
+    position: relative;
+    z-index: 1;
+    padding: 11px 8px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .2s;
+  }
+  .tab[aria-selected="true"] { color: var(--ink); }
+  .tab:hover { color: var(--ink); }
+
+  /* Panels and headings */
+  .panel { animation: panel-in .32s var(--ease) both; }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .panel h1 {
+    margin: 26px 0 6px;
+    font-size: 26px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -.025em;
+  }
+  .panel h1:focus { outline: none; }
+  .lead { margin: 0 0 22px; color: var(--ink-soft); font-size: 14.5px; }
+
+  /* Form */
+  .form { display: grid; gap: 16px; }
+
+  .field label {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .control { position: relative; }
+  .control input {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px;
+    border: 1px solid var(--field-edge);
+    border-radius: var(--r-ctrl);
+    background: var(--field-bg);
+    color: var(--ink);
+    font: inherit;
+    font-size: 16px;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .control input.has-toggle { padding-right: 54px; }
+  .control input::placeholder { color: #7F9AA8; }
+  .control input:hover { background: rgba(255, 255, 255, .09); }
+  .control input:focus { outline: none; border-color: var(--mint); background: rgba(255, 255, 255, .1); box-shadow: 0 0 0 4px rgba(111, 242, 224, .18); }
+  .control input[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 4px rgba(255, 163, 176, .14); }
+  .control input:-webkit-autofill {
+    -webkit-text-fill-color: var(--ink);
+    -webkit-box-shadow: 0 0 0 100px #14465c inset;
+    caret-color: var(--ink);
+  }
+
+  .toggle-pw {
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 40px; height: 40px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink-faint);
+    cursor: pointer;
+  }
+  .toggle-pw:hover { color: var(--ink); background: rgba(255, 255, 255, .08); }
+  .toggle-pw svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .toggle-pw .eye-off { display: none; }
+  .toggle-pw[aria-pressed="true"] .eye { display: none; }
+  .toggle-pw[aria-pressed="true"] .eye-off { display: block; }
+
+  .msg { margin: 6px 2px 0; font-size: 13px; color: var(--ink-faint); }
+  .msg:empty { display: none; }
+  .msg.is-error { color: var(--danger); }
+
+  /* Captcha (Turnstile mount or demo mock) */
+  .captcha { min-height: 65px; border-radius: var(--r-ctrl); }
+  .captcha.is-missing { box-shadow: 0 0 0 2px var(--danger); animation: shake .35s; }
+  @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+  .cap-mock {
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 16px;
+    border: 1px solid var(--field-edge);
+    border-radius: var(--r-ctrl);
+    background: var(--field-bg);
+  }
+  .cap-check {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 4px 6px 0;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  .cap-box {
+    position: relative;
+    flex: none;
+    width: 26px; height: 26px;
+    display: grid;
+    place-items: center;
+    border: 2px solid rgba(255, 255, 255, .42);
+    border-radius: 8px;
+    transition: background .2s, border-color .2s;
+  }
+  .cap-box svg {
+    width: 16px; height: 16px;
+    fill: none; stroke: var(--mint-ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0; transform: scale(.6);
+    transition: opacity .2s, transform .25s var(--ease);
+  }
+  .cap-box .spin { width: 14px; height: 14px; border-width: 2px; }
+  .captcha[data-state="loading"] .cap-box .spin { display: block; }
+  .captcha[data-state="done"] .cap-box { background: var(--mint); border-color: var(--mint); }
+  .captcha[data-state="done"] .cap-box svg { opacity: 1; transform: none; }
+  .cap-brand { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+
+  /* Banner and buttons */
+  .banner {
+    padding: 12px 14px;
+    border: 1px solid;
+    border-radius: var(--r-ctrl);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .banner--error   { color: #FFC7CF; background: rgba(255, 122, 144, .14); border-color: rgba(255, 122, 144, .42); }
+  .banner--success { color: #BCFBDF; background: rgba(155, 247, 204, .12); border-color: rgba(155, 247, 204, .4); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 52px;
+    border: 0;
+    border-radius: var(--r-ctrl);
+    background: var(--mint);
+    color: var(--mint-ink);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter .2s, transform .1s, opacity .2s;
+  }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .65; cursor: progress; filter: none; }
+  .btn--ghost { background: rgba(255, 255, 255, .1); color: var(--ink); box-shadow: inset 0 0 0 1px var(--edge); }
+
+  .spin {
+    display: none;
+    width: 18px; height: 18px;
+    border: 2.5px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  .btn[data-loading="true"] .spin { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Divider and guest entry */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0 16px;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .22), transparent);
+  }
+  .guest-ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .guest-note { margin: 10px 2px 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-faint); text-align: center; }
+  .guest-note strong { color: var(--ink-soft); font-weight: 600; }
+
+  /* Remember me */
+  .remember {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -4px 2px 0;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .remember input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .remember .box {
+    flex: none;
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    border: 2px solid rgba(255, 255, 255, .42);
+    border-radius: 7px;
+    transition: background .18s, border-color .18s;
+  }
+  .remember .box svg {
+    width: 14px; height: 14px;
+    fill: none; stroke: var(--mint-ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0; transform: scale(.6);
+    transition: opacity .18s, transform .22s var(--ease);
+  }
+  .remember input:checked + .box { background: var(--mint); border-color: var(--mint); }
+  .remember input:checked + .box svg { opacity: 1; transform: none; }
+  .remember input:focus-visible + .box { outline: 2px solid var(--mint); outline-offset: 2px; }
+
+  /* Auto sign-in */
+  .auto-user {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px; margin: 0 0 18px;
+    border: 1px solid var(--edge); border-radius: var(--r-ctrl);
+    background: var(--field-bg);
+  }
+  .auto-avatar {
+    flex: none; width: 46px; height: 46px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: rgba(111, 242, 224, .16);
+    box-shadow: inset 0 0 0 1px rgba(111, 242, 224, .4);
+    color: var(--mint); font-size: 19px; font-weight: 700;
+  }
+  .auto-user b { display: block; font-size: 16px; }
+  .auto-user span { font-size: 13px; color: var(--ink-faint); }
+  .auto-bar { height: 3px; margin: 0 0 16px; border-radius: 999px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+  .auto-bar i { display: block; height: 100%; width: 100%; background: var(--mint); transform-origin: left; animation: countdown 2.4s linear forwards; }
+  @keyframes countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  .auto-actions { display: grid; gap: 10px; }
+
+  .switch { margin: 18px 0 0; text-align: center; color: var(--ink-soft); font-size: 14px; }
+  .link {
+    padding: 2px 4px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--mint);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .link:hover { filter: brightness(1.12); }
+
+  /* Signed-in view */
+  .welcome-icon {
+    width: 56px; height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(111, 242, 224, .16);
+    box-shadow: inset 0 0 0 1px rgba(111, 242, 224, .4);
+    color: var(--mint);
+  }
+  .welcome-icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .profile { margin: 0 0 22px; padding: 4px 16px; border: 1px solid var(--edge); border-radius: var(--r-ctrl); background: var(--field-bg); }
+  .profile-row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; font-size: 14.5px; }
+  .profile-row + .profile-row { border-top: 1px solid rgba(255, 255, 255, .12); }
+  .profile dt { color: var(--ink-faint); flex: none; }
+  .profile dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+
+  /* Small screens and reduced motion */
+  @media (max-width: 400px) {
+    .card { padding: 22px 18px; }
+    .panel h1 { font-size: 24px; }
+  }
+  @media (max-width: 360px) {
+    .card { padding: 20px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card, .panel, .captcha.is-missing { animation: none; }
+    .orb, .tabs-thumb, .card-body, .tab { transition: none; }
+  }
+</style>
+</head>
+
+<body>
+<div class="page">
+  <main class="stage">
+
+    <div class="orbs" aria-hidden="true">
+      <i class="orb orb--mint"></i>
+      <i class="orb orb--cobalt"></i>
+      <i class="orb orb--coral"></i>
+    </div>
+
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="12" cy="16" r="10" fill="#6FF2E0" fill-opacity=".85"/>
+        <circle cx="20" cy="16" r="10" fill="#7C8BFF" fill-opacity=".75"/>
+      </svg>
+      <span>Kiho Labs</span>
+    </div>
+
+    <section class="card" aria-label="계정">
+      <div class="card-body" id="card-body">
+
+        <!-- Tabs -->
+        <div class="tabs" id="tabs" role="tablist" aria-label="로그인 또는 회원가입" data-active="login">
+          <span class="tabs-thumb" aria-hidden="true"></span>
+          <button class="tab" role="tab" type="button" id="tab-login" data-tab="login"
+                  aria-controls="panel-login" aria-selected="true">로그인</button>
+          <button class="tab" role="tab" type="button" id="tab-register" data-tab="register"
+                  aria-controls="panel-register" aria-selected="false" tabindex="-1">회원가입</button>
+        </div>
+
+        <!-- Login -->
+        <section class="panel" id="panel-login" role="tabpanel" aria-labelledby="tab-login" data-panel="login">
+          <h1>다시 오신 걸 환영해요</h1>
+          <p class="lead">아이디와 비밀번호로 로그인하세요.</p>
+
+          <form class="form" id="form-login" data-kind="login" method="POST" action="javascript:void(0);" novalidate>
+            <div class="field">
+              <label for="login-username">아이디</label>
+              <div class="control">
+                <input id="login-username" name="username" type="text" placeholder="아이디를 입력하세요"
+                       autocomplete="username" autocapitalize="none" spellcheck="false"
+                       data-rule="login-username" data-empty="아이디를 입력해 주세요."
+                       aria-describedby="login-username-msg">
+              </div>
+              <p class="msg" id="login-username-msg" data-hint=""></p>
+            </div>
+
+            <div class="field">
+              <label for="login-password">비밀번호</label>
+              <div class="control">
+                <input id="login-password" name="password" type="password" class="has-toggle" placeholder="비밀번호를 입력하세요"
+                       autocomplete="current-password" data-raw
+                       data-rule="login-password" data-empty="비밀번호를 입력해 주세요."
+                       aria-describedby="login-password-msg">
+                <button class="toggle-pw" type="button" aria-label="비밀번호 표시" aria-pressed="false">
+                  <svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A16.6 16.6 0 0 0 2 12s3.6 7 10 7c1.9 0 3.6-.5 5.1-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+                </button>
+              </div>
+              <p class="msg" id="login-password-msg" data-hint=""></p>
+            </div>
+
+            <label class="remember" for="login-remember">
+              <input type="checkbox" id="login-remember" name="remember" checked>
+              <span class="box" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              </span>
+              <span>로그인 상태 유지 (다음에 자동으로 로그인)</span>
+            </label>
+
+            <div class="captcha" data-captcha="login" data-state="idle">
+              <div class="cap-mock">
+                <button type="button" class="cap-check" role="checkbox" aria-checked="false">
+                  <span class="cap-box" aria-hidden="true">
+                    <span class="spin"></span>
+                    <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                  </span>
+                  <span class="cap-label">로봇이 아닙니다</span>
+                </button>
+                <span class="cap-brand">데모 캡차</span>
+              </div>
+            </div>
+
+            <div class="banner" id="login-banner" role="alert" hidden></div>
+
+            <button class="btn" type="submit" data-loading-label="로그인 중...">
+              <span class="spin" aria-hidden="true"></span>
+              <span class="btn-label">로그인</span>
+            </button>
+          </form>
+
+          <div class="divider" aria-hidden="true"><span>또는</span></div>
+
+          <button class="btn btn--ghost" type="button" id="btn-guest">
+            <svg class="guest-ico" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/>
+            </svg>
+            게스트로 시작하기
+          </button>
+          <p class="guest-note">게스트는 바로 플레이할 수 있지만 <strong>리더보드에 점수를 등록할 수 없어요.</strong></p>
+
+          <p class="switch">아직 계정이 없나요? <button type="button" class="link" data-goto="register">회원가입</button></p>
+        </section>
+
+        <!-- Register -->
+        <section class="panel" id="panel-register" role="tabpanel" aria-labelledby="tab-register" data-panel="register" hidden>
+          <h1>계정 만들기</h1>
+          <p class="lead">아래 정보를 입력해 새 계정을 만드세요.</p>
+
+          <form class="form" id="form-register" data-kind="register" method="POST" action="javascript:void(0);" novalidate>
+            <div class="field">
+              <label for="register-username">아이디</label>
+              <div class="control">
+                <input id="register-username" name="username" type="text" placeholder="사용할 아이디"
+                       autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20"
+                       data-rule="username" data-empty="아이디를 입력해 주세요."
+                       aria-describedby="register-username-msg">
+              </div>
+              <p class="msg" id="register-username-msg" data-hint="영문, 숫자, 밑줄(_) 4~20자">영문, 숫자, 밑줄(_) 4~20자</p>
+            </div>
+
+            <div class="field">
+              <label for="register-email">이메일</label>
+              <div class="control">
+                <input id="register-email" name="email" type="email" placeholder="user@example.com"
+                       autocomplete="email" autocapitalize="none" spellcheck="false" inputmode="email"
+                       data-rule="email" data-empty="이메일을 입력해 주세요."
+                       aria-describedby="register-email-msg">
+              </div>
+              <p class="msg" id="register-email-msg" data-hint=""></p>
+            </div>
+
+            <div class="field">
+              <label for="register-password">비밀번호</label>
+              <div class="control">
+                <input id="register-password" name="password" type="password" class="has-toggle" placeholder="비밀번호"
+                       autocomplete="new-password" data-raw maxlength="19"
+                       data-rule="password" data-empty="비밀번호를 입력해 주세요."
+                       aria-describedby="register-password-msg">
+                <button class="toggle-pw" type="button" aria-label="비밀번호 표시" aria-pressed="false">
+                  <svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A16.6 16.6 0 0 0 2 12s3.6 7 10 7c1.9 0 3.6-.5 5.1-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+                </button>
+              </div>
+              <p class="msg" id="register-password-msg" data-hint="영문과 숫자를 포함해 8자 이상 20자 미만">영문과 숫자를 포함해 8자 이상 20자 미만</p>
+            </div>
+
+            <div class="field">
+              <label for="register-confirm">비밀번호 확인</label>
+              <div class="control">
+                <input id="register-confirm" name="confirm" type="password" class="has-toggle" placeholder="비밀번호를 한 번 더 입력"
+                       autocomplete="new-password" data-raw maxlength="19"
+                       data-rule="confirm" data-empty="비밀번호를 한 번 더 입력해 주세요."
+                       aria-describedby="register-confirm-msg">
+                <button class="toggle-pw" type="button" aria-label="비밀번호 표시" aria-pressed="false">
+                  <svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A16.6 16.6 0 0 0 2 12s3.6 7 10 7c1.9 0 3.6-.5 5.1-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+                </button>
+              </div>
+              <p class="msg" id="register-confirm-msg" data-hint=""></p>
+            </div>
+
+            <div class="captcha" data-captcha="register" data-state="idle">
+              <div class="cap-mock">
+                <button type="button" class="cap-check" role="checkbox" aria-checked="false">
+                  <span class="cap-box" aria-hidden="true">
+                    <span class="spin"></span>
+                    <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                  </span>
+                  <span class="cap-label">로봇이 아닙니다</span>
+                </button>
+                <span class="cap-brand">데모 캡차</span>
+              </div>
+            </div>
+
+            <div class="banner" id="register-banner" role="alert" hidden></div>
+
+            <button class="btn" type="submit" data-loading-label="가입 중...">
+              <span class="spin" aria-hidden="true"></span>
+              <span class="btn-label">회원가입</span>
+            </button>
+          </form>
+
+          <p class="switch">이미 계정이 있나요? <button type="button" class="link" data-goto="login">로그인</button></p>
+        </section>
+
+        <!-- Auto sign-in (저장된 세션이 있을 때) -->
+        <section class="panel" data-panel="auto" role="region" aria-labelledby="auto-title" hidden>
+          <h1 id="auto-title" tabindex="-1">자동 로그인 중</h1>
+          <p class="lead" id="auto-lead">저장된 로그인 정보를 확인하고 있어요.</p>
+
+          <div class="auto-user">
+            <span class="auto-avatar" id="auto-initial" aria-hidden="true"></span>
+            <span>
+              <b id="auto-name"></b>
+              <span id="auto-sub">로그인 상태가 유지되고 있습니다</span>
+            </span>
+          </div>
+
+          <div class="auto-bar" id="auto-bar" hidden><i></i></div>
+
+          <div class="auto-actions">
+            <button class="btn" type="button" id="btn-auto-go">바로 시작하기</button>
+            <button class="btn btn--ghost" type="button" id="btn-auto-other">다른 계정으로 로그인</button>
+          </div>
+        </section>
+
+        <!-- Signed in -->
+        <section class="panel" data-panel="welcome" role="region" aria-labelledby="welcome-title" hidden>
+          <div class="welcome-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+          </div>
+          <h1 id="welcome-title" tabindex="-1">로그인되었습니다</h1>
+          <p class="lead" id="welcome-name"></p>
+          <dl class="profile" id="profile"></dl>
+          <button class="btn btn--ghost" type="button" id="btn-again">다른 계정으로 로그인</button>
+        </section>
+
+      </div>
+    </section>
+  </main>
+</div>
+
+<!--
+  세션 / 리더보드 공용 SDK — 이 HTML과 "같은 폴더"에 kiho-sdk.js 를 올려 주세요.
+  (경로가 맞지 않으면 아래 스크립트가 "Kiho is not defined" 대신 안내 문구를 띄웁니다.)
+-->
+<script src="kiho-sdk.js" onerror="window.__kihoSdkFailed = true;"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* SDK를 못 불러왔을 때: 페이지가 죽지 않도록 여기서 멈추고 사용자에게 알립니다. */
+  if (typeof window.Kiho === 'undefined') {
+    document.addEventListener('DOMContentLoaded', function () {
+      var el = document.getElementById('login-banner');
+      if (!el) return;
+      el.className = 'banner banner--error';
+      el.textContent = 'kiho-sdk.js 를 불러오지 못했어요. 이 페이지와 같은 폴더에 kiho-sdk.js 가 있는지 확인해 주세요.';
+      el.hidden = false;
+    });
+    return;
+  }
+
+  /* ==============================================================
+     Settings
+     API_BASE 를 빈 문자열('')로 두면 이 페이지와 같은 도메인의
+     /api/register, /api/login 으로 요청합니다.
+  ============================================================== */
+   var CONFIG = {
+    API_BASE: 'https://api.kiholabs.com',
+
+    // Cloudflare Turnstile 사이트 키 (공개 키라 HTML에 넣어도 안전합니다).
+    // ★ Worker에 TURNSTILE_SECRET 이 설정되어 있다면 여기에 같은 위젯의 "사이트 키"를 반드시 넣어야 합니다.
+    //   비워두면 데모용 가짜 캡차가 뜨고 토큰이 전송되지 않아 서버가 403 을 돌려줍니다.
+    // 테스트용 키: 1x00000000000000000000AA (항상 통과 / Worker 시크릿은 1x0000000000000000000000000000000AA)
+    TURNSTILE_SITE_KEY: '0x4AAAAAAE85eN0lB5oOpXPa',
+
+    // Turnstile 사용 시 토큰을 요청 바디에 turnstileToken 으로 함께 보냅니다.
+    SEND_CAPTCHA_TOKEN: true,
+
+    // 쿠키 세션을 쓰는 경우에만 true
+    WITH_CREDENTIALS: false,
+
+    // 로그인 성공 후 이동할 경로. 비워두면 이 페이지에 완료 화면을 보여줍니다.
+    REDIRECT_AFTER_LOGIN: 'games.html',
+
+    TIMEOUT_MS: 15000
+  };
+
+  // 주소 앞부분(https:)을 일부러 생략한 형태입니다.
+  var TURNSTILE_SRC = '//challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+
+  /* ==============================================================
+     Helpers
+  ============================================================== */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TURNSTILE_ON = String(CONFIG.TURNSTILE_SITE_KEY).trim() !== '';
+
+  var cardBody = $('#card-body');
+  var tabsEl = $('#tabs');
+  var tabBtns = $$('[role="tab"]');
+  var panels = $$('[data-panel]');
+  var state = { tab: 'login', welcome: false, loading: { login: false, register: false } };
+  var TITLES = { login: '로그인 - Kiho Labs', register: '회원가입 - Kiho Labs' };
+
+  /* 카드 높이가 부드럽게 늘고 줄도록 */
+  function morph(mutate, instant) {
+    if (instant || reduceMotion) { mutate(); return; }
+    var from = cardBody.offsetHeight;
+    cardBody.style.height = from + 'px';
+    cardBody.classList.add('is-morphing');
+    mutate();
+    cardBody.style.height = 'auto';
+    var to = cardBody.offsetHeight;
+    cardBody.style.height = from + 'px';
+    cardBody.getBoundingClientRect(); // reflow
+    cardBody.style.height = to + 'px';
+
+    var finished = false;
+    function done() {
+      if (finished) return;
+      finished = true;
+      cardBody.style.height = '';
+      cardBody.classList.remove('is-morphing');
+      cardBody.removeEventListener('transitionend', onEnd);
+    }
+    function onEnd(e) {
+      if (e.target === cardBody && e.propertyName === 'height') done();
+    }
+    cardBody.addEventListener('transitionend', onEnd);
+    setTimeout(done, 500);
+  }
+
+  /* ==============================================================
+     Tabs
+  ============================================================== */
+  function setTab(name, opts) {
+    opts = opts || {};
+    if (name === state.tab && !state.welcome) return;
+
+    morph(function () {
+      state.tab = name;
+      state.welcome = false;
+      tabsEl.hidden = false;
+      tabsEl.setAttribute('data-active', name);
+      tabBtns.forEach(function (b) {
+        var on = b.getAttribute('data-tab') === name;
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== name; });
+      hideBanner('login');
+      hideBanner('register');
+      if (opts.onApply) opts.onApply();
+    }, opts.instant);
+
+    mountCaptcha(name);
+    document.title = TITLES[name];
+  }
+
+  tabBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () { setTab(btn.getAttribute('data-tab')); });
+    btn.addEventListener('keydown', function (e) {
+      var i = tabBtns.indexOf(btn);
+      var n = null;
+      if (e.key === 'ArrowRight') n = (i + 1) % tabBtns.length;
+      else if (e.key === 'ArrowLeft') n = (i - 1 + tabBtns.length) % tabBtns.length;
+      else if (e.key === 'Home') n = 0;
+      else if (e.key === 'End') n = tabBtns.length - 1;
+      if (n === null) return;
+      e.preventDefault();
+      setTab(tabBtns[n].getAttribute('data-tab'));
+      tabBtns[n].focus();
+    });
+  });
+
+  $$('[data-goto]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var name = btn.getAttribute('data-goto');
+      setTab(name);
+      $('#form-' + name + ' input').focus();
+    });
+  });
+
+  /* ==============================================================
+     Captcha: Turnstile (키를 넣은 경우) 또는 데모 캡차
+  ============================================================== */
+  var captcha = {
+    login: { token: '', reset: function () {} },
+    register: { token: '', reset: function () {} }
+  };
+
+  function captchaHost(kind) { return $('[data-captcha="' + kind + '"]'); }
+
+  function mountCaptcha(kind) {
+    var host = captchaHost(kind);
+    if (host.getAttribute('data-ready')) return;
+    host.setAttribute('data-ready', '1');
+    if (TURNSTILE_ON) mountTurnstile(kind, host);
+    else bindMock(kind, host);
+  }
+
+  var turnstilePromise = null;
+  function loadTurnstile() {
+    if (!turnstilePromise) {
+      turnstilePromise = new Promise(function (resolve, reject) {
+        if (window.turnstile) { resolve(window.turnstile); return; }
+        var s = document.createElement('script');
+        s.src = TURNSTILE_SRC;
+        s.async = true;
+        s.defer = true;
+        s.onload = function () { resolve(window.turnstile); };
+        s.onerror = function () { reject(new Error('turnstile load failed')); };
+        document.head.appendChild(s);
+      });
+    }
+    return turnstilePromise;
+  }
+
+  function mountTurnstile(kind, host) {
+    var cap = captcha[kind];
+    host.textContent = '';
+    host.removeAttribute('data-state');
+    loadTurnstile().then(function (ts) {
+      var id = ts.render(host, {
+        sitekey: String(CONFIG.TURNSTILE_SITE_KEY).trim(),
+        theme: 'dark',
+        size: 'flexible',
+        language: 'ko',
+        callback: function (token) { cap.token = token; host.classList.remove('is-missing'); },
+        'expired-callback': function () { cap.token = ''; },
+        'error-callback': function () { cap.token = ''; }
+      });
+      cap.reset = function () { cap.token = ''; ts.reset(id); };
+    }).catch(function () {
+      host.setAttribute('data-ready', '');
+      host.textContent = '로봇 방지 위젯을 불러오지 못했어요. 페이지를 새로고침해 주세요.';
+      host.style.cssText = 'color:#FFA3B0;font-size:14px;padding:12px 2px';
+    });
+  }
+
+  function bindMock(kind, host) {
+    var cap = captcha[kind];
+    var btn = $('.cap-check', host);
+    var label = $('.cap-label', host);
+    var busy = false;
+
+    host.setAttribute('data-state', 'idle');
+
+    btn.addEventListener('click', function () {
+      if (busy || cap.token) return;
+      busy = true;
+      host.setAttribute('data-state', 'loading');
+      label.textContent = '확인 중...';
+      setTimeout(function () {
+        cap.token = 'mock-' + Date.now().toString(36);
+        host.setAttribute('data-state', 'done');
+        host.classList.remove('is-missing');
+        btn.setAttribute('aria-checked', 'true');
+        label.textContent = '확인되었습니다';
+        busy = false;
+      }, 900);
+    });
+
+    cap.reset = function () {
+      cap.token = '';
+      busy = false;
+      host.setAttribute('data-state', 'idle');
+      btn.setAttribute('aria-checked', 'false');
+      label.textContent = '로봇이 아닙니다';
+    };
+  }
+
+  function flagCaptcha(kind) {
+    var host = captchaHost(kind);
+    host.classList.remove('is-missing');
+    void host.offsetWidth;
+    host.classList.add('is-missing');
+  }
+
+  /* ==============================================================
+     Validation
+  ============================================================== */
+  var PASSWORD_MIN = 8;
+  var PASSWORD_MAX_EXCLUSIVE = 20; // 20자 미만만 허용
+
+  var RULES = {
+    'login-username': function () { return ''; },
+    'login-password': function () { return ''; },
+    username: function (v) {
+      return /^[A-Za-z0-9_]{4,20}$/.test(v) ? '' : '아이디는 영문, 숫자, 밑줄(_) 4~20자로 입력해 주세요.';
+    },
+    email: function (v) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? '' : '올바른 이메일 주소를 입력해 주세요.';
+    },
+    password: function (v) {
+      if (v.length < PASSWORD_MIN) return '비밀번호는 영문과 숫자를 포함해 ' + PASSWORD_MIN + '자 이상이어야 해요.';
+      if (v.length >= PASSWORD_MAX_EXCLUSIVE) return '비밀번호는 ' + PASSWORD_MAX_EXCLUSIVE + '자 미만(최대 ' + (PASSWORD_MAX_EXCLUSIVE - 1) + '자)으로 입력해 주세요.';
+      if (!/[A-Za-z]/.test(v) || !/\d/.test(v)) return '비밀번호에 영문과 숫자를 모두 포함해 주세요.';
+      return '';
+    },
+    confirm: function (v, form) {
+      return v === form.elements.password.value ? '' : '비밀번호가 일치하지 않아요.';
+    }
+  };
+
+  function fieldValue(input) {
+    return input.hasAttribute('data-raw') ? input.value : input.value.trim();
+  }
+
+  function setFieldState(input, message) {
+    var msgEl = document.getElementById(input.id + '-msg');
+    if (message) {
+      input.setAttribute('aria-invalid', 'true');
+      msgEl.textContent = message;
+      msgEl.classList.add('is-error');
+    } else {
+      input.removeAttribute('aria-invalid');
+      msgEl.textContent = msgEl.getAttribute('data-hint') || '';
+      msgEl.classList.remove('is-error');
+    }
+  }
+
+  function validateField(input) {
+    var v = fieldValue(input);
+    var message = v === '' ? input.getAttribute('data-empty') : RULES[input.getAttribute('data-rule')](v, input.form);
+    setFieldState(input, message);
+    return !message;
+  }
+
+  $$('form[data-kind]').forEach(function (form) {
+    var kind = form.getAttribute('data-kind');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      submit(kind, form);
+    });
+
+    $$('input[data-rule]', form).forEach(function (input) {
+      input.addEventListener('blur', function () {
+        if (input.value.trim() !== '') validateField(input);
+      });
+      input.addEventListener('input', function () {
+        if (input.getAttribute('aria-invalid') === 'true') validateField(input);
+        var confirm = form.elements.confirm;
+        if (input.name === 'password' && confirm && confirm.value) validateField(confirm);
+      });
+    });
+  });
+
+  /* 비밀번호 표시 / 숨기기 */
+  $$('.toggle-pw').forEach(function (btn) {
+    var input = $('input', btn.parentNode);
+    btn.addEventListener('mousedown', function (e) { e.preventDefault(); }); // 입력창 포커스 유지
+    btn.addEventListener('click', function () {
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', String(show));
+      btn.setAttribute('aria-label', show ? '비밀번호 숨기기' : '비밀번호 표시');
+    });
+  });
+
+  /* ==============================================================
+     API
+  ============================================================== */
+  async function postJSON(path, body) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, CONFIG.TIMEOUT_MS);
+    try {
+      var res = await fetch(String(CONFIG.API_BASE).replace(/\/$/, '') + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(body),
+        credentials: CONFIG.WITH_CREDENTIALS ? 'include' : 'same-origin',
+        signal: ctrl.signal
+      });
+      var data = null;
+      try { data = await res.json(); } catch (e) { data = null; }
+      return { status: res.status, ok: res.ok && !!data && data.success === true, data: data };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function httpError(status) {
+    if (status === 404 || status === 405) return '서버에서 API를 찾지 못했어요. 배포 상태를 확인해 주세요.';
+    if (status >= 500) return '서버에 문제가 생겼어요. 잠시 후 다시 시도해 주세요.';
+    return '요청을 처리하지 못했어요. 입력한 내용을 확인해 주세요.';
+  }
+
+  function networkError(err) {
+    if (err && err.name === 'AbortError') return '서버 응답이 늦어지고 있어요. 잠시 후 다시 시도해 주세요.';
+    return '서버에 연결하지 못했어요. 네트워크 상태를 확인하고 다시 시도해 주세요.';
+  }
+
+  /* ==============================================================
+     Submit
+  ============================================================== */
+  function showBanner(kind, type, text) {
+    var el = $('#' + kind + '-banner');
+    el.className = 'banner banner--' + type;
+    el.textContent = text;
+    el.hidden = false;
+  }
+
+  function hideBanner(kind) { $('#' + kind + '-banner').hidden = true; }
+
+  function setLoading(kind, on) {
+    state.loading[kind] = on;
+    var btn = $('button[type="submit"]', $('#form-' + kind));
+    var label = $('.btn-label', btn);
+    if (!btn.getAttribute('data-label')) btn.setAttribute('data-label', label.textContent);
+    btn.disabled = on;
+    btn.setAttribute('data-loading', String(on));
+    btn.setAttribute('aria-busy', String(on));
+    label.textContent = on ? btn.getAttribute('data-loading-label') : btn.getAttribute('data-label');
+  }
+
+  async function submit(kind, form) {
+    if (state.loading[kind]) return;
+    hideBanner(kind);
+
+    var inputs = $$('input[data-rule]', form);
+    var invalid = inputs.filter(function (i) { return !validateField(i); });
+    if (invalid.length) { invalid[0].focus(); return; }
+
+    if (!captcha[kind].token) {
+      flagCaptcha(kind);
+      showBanner(kind, 'error', '로봇 방지 확인을 먼저 완료해 주세요.');
+      return;
+    }
+
+    var v = {};
+    inputs.forEach(function (i) { v[i.name] = fieldValue(i); });
+
+    var path, payload;
+    if (kind === 'login') {
+      path = '/api/login';
+      payload = { username: v.username, password: v.password };
+    } else {
+      path = '/api/register';
+      payload = { username: v.username, password: v.password, email: v.email };
+    }
+    if (TURNSTILE_ON && CONFIG.SEND_CAPTCHA_TOKEN) payload.turnstileToken = captcha[kind].token;
+
+    setLoading(kind, true);
+    try {
+      var r = await postJSON(path, payload);
+      if (r.ok) {
+        onSuccess(kind, form, v, r.data);
+      } else {
+        showBanner(kind, 'error', (r.data && r.data.error) || httpError(r.status));
+        if (r.data && r.data.code === 'captcha_missing' && !TURNSTILE_ON) {
+          console.warn('[Kiho] 서버가 Turnstile 토큰을 요구하지만 TURNSTILE_SITE_KEY 가 비어 있어 토큰을 보내지 못했습니다. ' +
+                       'login.html 의 CONFIG.TURNSTILE_SITE_KEY 에 사이트 키를 넣어 주세요.');
+        }
+        if (r.data && r.data.code === 'captcha_rejected') {
+          console.warn('[Kiho] Turnstile 검증 거부:', r.data.details || []);
+        }
+        captcha[kind].reset(); // 캡차 토큰은 1회용
+      }
+    } catch (err) {
+      showBanner(kind, 'error', networkError(err));
+      captcha[kind].reset();
+    } finally {
+      setLoading(kind, false);
+    }
+  }
+
+  function onSuccess(kind, form, v, data) {
+    if (kind === 'register') {
+      form.reset();
+      $$('input[data-rule]', form).forEach(function (i) { setFieldState(i, ''); });
+      $$('.toggle-pw', form).forEach(function (b) {
+        $('input', b.parentNode).type = 'password';
+        b.setAttribute('aria-pressed', 'false');
+        b.setAttribute('aria-label', '비밀번호 표시');
+      });
+      captcha.register.reset();
+
+      var loginForm = $('#form-login');
+      loginForm.elements.username.value = v.username;
+      setTab('login', {
+        onApply: function () {
+          showBanner('login', 'success', data.message || '회원가입이 완료되었습니다.');
+        }
+      });
+      loginForm.elements.password.focus();
+      return;
+    }
+
+    // login — 세션(토큰 + 사용자)을 저장해 게임 페이지에서 리더보드에 점수를 올릴 수 있게 합니다.
+    form.elements.password.value = '';
+    var keep = form.elements.remember ? form.elements.remember.checked : true;
+    Kiho.login(data.token, data.user, keep); // keep=true 면 다음 방문 때 자동 로그인
+    window.dispatchEvent(new CustomEvent('auth:login', { detail: data.user }));
+
+    var next = new URLSearchParams(location.search).get('next');
+    var dest = next || CONFIG.REDIRECT_AFTER_LOGIN;
+    if (dest) { location.assign(dest); return; }
+    showWelcome(data.user);
+  }
+
+  /* ==============================================================
+     Signed-in view
+  ============================================================== */
+  var HIDDEN_KEYS = /pass|pw|hash|salt|token|secret/i;
+  var KEY_LABELS = { id: '회원 번호', username: '아이디', email: '이메일', created_at: '가입일' };
+
+  function showWelcome(user) {
+    user = user || {};
+    var name = user.nickname || user.name || user.username;
+    $('#welcome-name').textContent = name ? name + '님, 환영합니다.' : '환영합니다.';
+
+    var dl = $('#profile');
+    while (dl.firstChild) dl.removeChild(dl.firstChild);
+    Object.keys(user).forEach(function (k) {
+      var val = user[k];
+      if (HIDDEN_KEYS.test(k) || val === null || val === undefined || typeof val === 'object') return;
+      var row = document.createElement('div');
+      row.className = 'profile-row';
+      var dt = document.createElement('dt');
+      dt.textContent = KEY_LABELS[k] || k;
+      var dd = document.createElement('dd');
+      dd.textContent = String(val);
+      row.appendChild(dt);
+      row.appendChild(dd);
+      dl.appendChild(row);
+    });
+    dl.hidden = !dl.firstChild;
+
+    morph(function () {
+      state.welcome = true;
+      tabsEl.hidden = true;
+      panels.forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== 'welcome'; });
+    });
+    document.title = '로그인 완료 - Kiho Labs';
+    $('#welcome-title').focus();
+  }
+
+  $('#btn-again').addEventListener('click', function () {
+    captcha.login.reset();
+    setTab('login');
+    $('#login-username').focus();
+  });
+
+  /* ==============================================================
+     게스트로 시작하기
+     - 세션을 'guest' 로 표시해 두면 게임 페이지는 플레이만 허용하고
+       점수 전송은 Kiho.submitScore() 안에서 차단됩니다.
+  ============================================================== */
+  $('#btn-guest').addEventListener('click', function () {
+    Kiho.startGuest();
+    var next = new URLSearchParams(location.search).get('next');
+    location.assign(next || Kiho.CONFIG.HUB_PAGE);
+  });
+
+  /* 게스트로 플레이하고 등록하지 못한 점수가 있으면 로그인 유도 */
+  (function () {
+    var pending = Kiho.pendingScore();
+    if (!pending || !pending.payload) return;
+    if (Date.now() - pending.at > 1000 * 60 * 60 * 24) { Kiho.clearPending(); return; }
+    showBanner('login', 'success',
+      '게스트로 플레이한 ' + Number(pending.payload.score || 0).toLocaleString() +
+      '점이 남아 있어요. 로그인하면 리더보드에 등록할 수 있습니다.');
+  })();
+
+  /* ==============================================================
+     자동 로그인 (로그인 상태 유지)
+     - 저장된 토큰이 있으면 먼저 /api/me 로 유효성을 확인하고
+       2.4초 카운트다운 후 게임 목록으로 이동합니다.
+     - "다른 계정으로 로그인"을 누르면 세션을 지우고 폼으로 돌아옵니다.
+     - 주소에 ?logout=1 을 붙이면 자동 로그인을 건너뜁니다.
+  ============================================================== */
+  var params = new URLSearchParams(location.search);
+  var nextPage = params.get('next');
+  var autoTimer = 0;
+
+  function destination() { return nextPage || CONFIG.REDIRECT_AFTER_LOGIN || 'games.html'; }
+
+  function cancelAuto() {
+    clearTimeout(autoTimer);
+    autoTimer = 0;
+    $('#auto-bar').hidden = true;
+  }
+
+  function showAutoPanel(user) {
+    var name = (user && (user.nickname || user.username)) || '';
+    $('#auto-name').textContent = name ? name + '님' : '저장된 계정';
+    $('#auto-initial').textContent = name ? name.charAt(0).toUpperCase() : '?';
+
+    morph(function () {
+      state.welcome = true;
+      tabsEl.hidden = true;
+      panels.forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== 'auto'; });
+    }, true);
+    document.title = '자동 로그인 - Kiho Labs';
+  }
+
+  function runAutoLogin() {
+    if (params.get('logout') === '1') { Kiho.logout(); return false; }
+    if (!Kiho.isMember()) return false;
+
+    showAutoPanel(Kiho.user());
+
+    Kiho.verify().then(function (user) {
+      if (!user) { // 토큰 만료 또는 삭제된 계정
+        cancelAuto();
+        setTab('login', {
+          onApply: function () {
+            showBanner('login', 'error', '로그인이 만료되었어요. 다시 로그인해 주세요.');
+          }
+        });
+        mountCaptcha('login');
+        return;
+      }
+      $('#auto-name').textContent = (user.nickname || user.username) + '님';
+      $('#auto-initial').textContent = (user.nickname || user.username).charAt(0).toUpperCase();
+      $('#auto-lead').textContent = '잠시 후 게임 목록으로 이동합니다.';
+      $('#auto-bar').hidden = false;
+      autoTimer = setTimeout(function () { location.assign(destination()); }, 2400);
+    });
+
+    return true;
+  }
+
+  $('#btn-auto-go').addEventListener('click', function () {
+    cancelAuto();
+    location.assign(destination());
+  });
+
+  $('#btn-auto-other').addEventListener('click', function () {
+    cancelAuto();
+    Kiho.logout();
+    setTab('login');
+    mountCaptcha('login');
+    $('#login-username').focus();
+  });
+
+  /* ==============================================================
+     Pointer parallax for the background orbs
+  ============================================================== */
+  if (!reduceMotion && window.matchMedia('(pointer: fine)').matches) {
+    var root = document.documentElement;
+    var raf = 0;
+    window.addEventListener('pointermove', function (e) {
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        raf = 0;
+        root.style.setProperty('--px', ((e.clientX / window.innerWidth - 0.5) * 2).toFixed(3));
+        root.style.setProperty('--py', ((e.clientY / window.innerHeight - 0.5) * 2).toFixed(3));
+      });
+    }, { passive: true });
+  }
+
+  /* ==============================================================
+     Init  (주소 뒤에 #register 를 붙이면 회원가입 탭이 먼저 열립니다)
+  ============================================================== */
+  var initial = location.hash === '#register' ? 'register' : 'login';
+
+  if (runAutoLogin()) {
+    // 자동 로그인 화면을 보여주는 중 — 캡차는 필요할 때 붙입니다.
+  } else {
+    if (initial !== 'login') setTab(initial, { instant: true });
+    mountCaptcha(initial);
+    document.title = TITLES[initial];
+  }
+})();
+</script>
+</body>
+</html>

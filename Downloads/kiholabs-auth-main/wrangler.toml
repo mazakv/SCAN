@@ -1,0 +1,14 @@
+name = "kiholabs-auth"
+main = "worker/index.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "login-db"
+database_id = "bb40b077-5755-4add-860b-eec5f1b70c54"
+[vars]
+ENVIRONMENT = "production"
+
+routes = [
+  { pattern = "api.kiholabs.com", custom_domain = true }
+]

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A2A3C">
+<title>내 태그 - Kiho Labs</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+<style>
+  :root {
+    --bg:#0A2A3C; --ink:#F2F8FB; --ink-soft:#B9CDD8; --ink-faint:#8FAAB8;
+    --mint:#6FF2E0; --mint-ink:#062230; --danger:#FFA3B0; --ok:#9BF7CC;
+    --edge:rgba(255,255,255,.18); --field-bg:rgba(255,255,255,.07);
+    --r-card:28px; --r-ctrl:14px; --ease:cubic-bezier(.3,.8,.2,1);
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  body {
+    margin:0; min-height:100dvh;
+    background: linear-gradient(160deg,#0C3549 0%,#0A2A3C 48%,#071F2E 100%); background-attachment:fixed;
+    color:var(--ink); font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  a { color:inherit; } button { font-family:inherit; }
+  :focus-visible { outline:2px solid var(--mint); outline-offset:2px; }
+
+  .page { position:relative; min-height:100dvh; padding:24px 16px 72px; overflow:clip; }
+  .wrap { position:relative; z-index:1; width:min(920px,100%); margin:0 auto; }
+  .orbs { position:absolute; inset:0; z-index:0; pointer-events:none; }
+  .orb { position:absolute; border-radius:50%; }
+  .orb--mint { width:520px; height:520px; left:-240px; top:-120px; background:radial-gradient(circle,rgba(34,211,197,.7),rgba(34,211,197,0) 68%); }
+  .orb--cobalt { width:620px; height:620px; right:-300px; bottom:-260px; background:radial-gradient(circle,rgba(99,112,255,.8),rgba(99,112,255,0) 68%); }
+  .orb--coral { width:300px; height:300px; left:12%; bottom:-150px; background:radial-gradient(circle,rgba(255,122,144,.7),rgba(255,122,144,0) 68%); }
+
+  .top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
+  .brand { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:700; letter-spacing:-.01em; text-decoration:none; }
+  .brand svg { width:30px; height:30px; }
+  .nav { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .pill { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:38px; padding:0 14px; border:0; border-radius:999px; text-decoration:none;
+    background:rgba(255,255,255,.1); color:var(--ink); box-shadow:inset 0 0 0 1px var(--edge); font-size:14px; font-weight:600; cursor:pointer; transition:filter .2s; }
+  .pill:hover { filter:brightness(1.12); }
+  .pill--mint { background:var(--mint); color:var(--mint-ink); box-shadow:none; }
+  .pill--sm { height:32px; padding:0 12px; font-size:13px; }
+  .pill:disabled { opacity:.5; cursor:not-allowed; }
+
+  h1 { margin:0 0 6px; font-size:32px; font-weight:800; letter-spacing:-.03em; }
+  .lead { margin:0 0 20px; color:var(--ink-soft); font-size:15px; } .lead a { color:var(--mint); font-weight:700; }
+  .admin-chip { display:inline-flex; align-items:center; gap:6px; padding:3px 11px; margin-left:8px; border-radius:999px; font-size:12.5px; font-weight:800;
+    color:#3a2200; background:linear-gradient(135deg,#fff3b8,#ffc93c 55%,#ff9d1e); vertical-align:middle; }
+
+  .glass { padding:20px 18px; border-radius:var(--r-card); background:linear-gradient(160deg,rgba(255,255,255,.15),rgba(255,255,255,.05));
+    -webkit-backdrop-filter:blur(26px) saturate(150%); backdrop-filter:blur(26px) saturate(150%);
+    box-shadow:0 30px 60px -20px rgba(2,12,20,.55),inset 0 1px 0 rgba(255,255,255,.25); }
+  .stack { display:grid; gap:18px; }
+
+  /* ---------- 장착 슬롯 (최대 3개) ---------- */
+  .slots-h { display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:0 4px 14px; }
+  .slots-h b { font-size:15px; } .slots-h span { font-size:13px; color:var(--ink-faint); }
+  .slots { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .slot {
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-height:118px;
+    padding:16px 12px; border-radius:20px; text-align:center; background:var(--field-bg);
+    box-shadow:inset 0 0 0 1.5px var(--edge);
+  }
+  .slot.filled { box-shadow:inset 0 0 0 2px rgba(111,242,224,.55); background:rgba(111,242,224,.08); }
+  .slot .kt { font-size:15px; }
+  .slot-empty { color:var(--ink-faint); font-size:13px; }
+  .slot-plus { width:34px; height:34px; display:grid; place-items:center; border-radius:50%; font-size:20px; color:var(--ink-faint); background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px var(--edge); }
+
+  .sec-h { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 4px 12px; flex-wrap:wrap; }
+  .sec-h h2 { margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .sec-h span { font-size:13px; color:var(--ink-faint); }
+
+  .kinds { display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .kinds::-webkit-scrollbar { display:none; }
+  .kind { flex:none; display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 14px; border:0; border-radius:999px;
+    background:var(--field-bg); color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--edge); font-size:13.5px; font-weight:600; cursor:pointer; transition:background .18s,color .18s; }
+  .kind:hover { background:rgba(255,255,255,.12); color:var(--ink); }
+  .kind[aria-selected="true"] { color:var(--ink); background:rgba(255,255,255,.14); box-shadow:inset 0 0 0 2px var(--mint); }
+  .kind b { font-variant-numeric:tabular-nums; color:var(--ink-faint); font-weight:600; }
+  .kind[aria-selected="true"] b { color:var(--mint); }
+
+  /* ---------- 태그 카드 ---------- *
+     ★ 레이아웃 버그 수정: 배지+버튼이 이름 칸보다 넓어져도(예: 긴 태그 이름)
+       이름을 0 폭으로 짓누르지 않도록 flex-wrap을 허용합니다.
+       (이전에는 min-width:0 인 이름 칸이 다른 요소에 밀려 한 글자씩 세로로 깨졌어요) */
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+  .card {
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+    padding:14px 16px; border-radius:18px; background:var(--field-bg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);
+  }
+  .card.is-equipped { box-shadow:inset 0 0 0 2px var(--mint); background:rgba(111,242,224,.1); }
+  .card > .kt, .card > button { flex:none; }
+  .card .kt { font-size:16px; }
+  .card-b { flex:1 1 140px; min-width:120px; }
+  .card-b b { display:block; font-size:15px; overflow-wrap:anywhere; }
+  .card-b span { display:block; font-size:12px; color:var(--ink-faint); margin-top:2px; }
+
+  .empty { text-align:center; padding:34px 12px; color:var(--ink-soft); }
+  .empty h3 { margin:0 0 6px; font-size:17px; color:var(--ink); } .empty p { margin:0 0 14px; font-size:14px; }
+  .state { text-align:center; padding:34px 12px; color:var(--ink-soft); }
+  .state h3 { margin:0 0 6px; font-size:18px; color:var(--ink); } .state p { margin:0 0 16px; font-size:14px; } .state--error h3 { color:var(--danger); }
+
+  .toast { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:20; transform:translateX(-50%); max-width:min(92vw,440px);
+    padding:12px 18px; border-radius:14px; font-size:14px; font-weight:600; color:#062230; background:var(--mint); box-shadow:0 14px 40px -10px rgba(0,0,0,.6); }
+  .toast--error { color:#fff; background:#c94a63; }
+
+  @media (max-width:560px) { h1 { font-size:26px; } .brand span { display:none; } .slots { grid-template-columns:1fr; } }
+  @media (prefers-reduced-motion:reduce) { .card { transition:none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="orbs" aria-hidden="true"><i class="orb orb--mint"></i><i class="orb orb--cobalt"></i><i class="orb orb--coral"></i></div>
+
+  <main class="wrap">
+    <header class="top">
+      <a class="brand" href="games.html" aria-label="메인 화면으로">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="12" cy="16" r="10" fill="#6FF2E0" fill-opacity=".85"/><circle cx="20" cy="16" r="10" fill="#7C8BFF" fill-opacity=".75"/></svg>
+        <span>Kiho Labs</span>
+      </a>
+      <nav class="nav">
+        <a class="pill" href="games.html">메인</a>
+        <a class="pill" href="leaderboard.html">리더보드</a>
+        <a class="pill" href="codex.html">태그 도감</a>
+        <a class="pill pill--mint" id="nav-account" href="login.html">로그인</a>
+      </nav>
+    </header>
+
+    <h1>내 태그<span class="admin-chip" id="admin-chip" hidden>★ 관리자 · 전 배지 보유</span></h1>
+    <p class="lead">최대 3개까지 동시에 장착할 수 있어요. 장착하면 리더보드 이름 옆에 표시돼요.
+      등급은 <a href="games.html#tiers">메인 화면 등급표</a>에서, 퀘스트는 <a href="games.html#quests">메인 화면 퀘스트</a>에서,
+      전체 목록은 <a href="codex.html">태그 도감</a>에서 볼 수 있어요.</p>
+
+    <div class="stack" id="root"></div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="kiho-sdk.js"></script>
+<script src="kiho-badge.js"></script>
+<script src="kiho-nav.js" defer></script>
+<script>
+(function () {
+  'use strict';
+
+  var API_BASE = (typeof Kiho !== 'undefined' && Kiho.CONFIG && Kiho.CONFIG.API_BASE) || 'https://api.kiholabs.com';
+  var EQUIP_SLOTS = 3;
+  var $ = function (s) { return document.querySelector(s); };
+  var toastTimer = 0;
+
+  var KINDS = [
+    { id: 'all', name: '전체' },
+    { id: 'tier', name: '등급' },
+    { id: 'quest', name: '퀘스트' },
+    { id: 'limited', name: '한정판' },
+    { id: 'season', name: '시즌 랭킹' },
+    { id: 'exclusive', name: '전용' }
+  ];
+  var state = { kind: 'all', status: 'loading', error: '', data: null, busySlot: null };
+
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function pill(tag, size) {
+    if (typeof KihoBadge !== 'undefined') { var p = KihoBadge.tagPill(tag, { size: size }); if (p) return p; }
+    var f = document.createElement('span'); f.textContent = tag ? '[' + tag.name + ']' : ''; return f;
+  }
+  function toast(msg, isError) {
+    var t = $('#toast'); t.textContent = msg; t.className = 'toast' + (isError ? ' toast--error' : ''); t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3000);
+  }
+
+  function api(path, opts) {
+    opts = opts || {};
+    var ctrl = new AbortController(); var timer = setTimeout(function () { ctrl.abort(); }, 15000);
+    var headers = { 'Accept': 'application/json' };
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    if (typeof Kiho !== 'undefined' && Kiho.isMember() && Kiho.token()) headers['Authorization'] = 'Bearer ' + Kiho.token();
+    return fetch(API_BASE.replace(/\/$/, '') + path, {
+      method: opts.method || 'GET', headers: headers, signal: ctrl.signal,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        return { status: res.status, ok: res.ok && !!data && data.success === true, data: data };
+      });
+    }).then(function (r) { clearTimeout(timer); return r; }, function (e) { clearTimeout(timer); throw e; });
+  }
+  function errText(err) {
+    if (err && err.name === 'AbortError') return '서버 응답이 늦어지고 있어요. 잠시 후 다시 시도해 주세요.';
+    try { console.error('[kiho]', err); } catch (e) {}
+    var isNet = err instanceof TypeError && /fetch|network|load failed|failed to/i.test(String(err.message));
+    if (isNet) {
+      var host = location.hostname;
+      if (location.protocol === 'file:' || !/(^|\.)kiholabs\.com$/.test(host))
+        return '이 주소(' + (host || '파일') + ')에서는 서버가 접속을 막아요. kiholabs.com 으로 접속해 주세요.';
+      return '서버에 연결하지 못했어요. 네트워크 상태를 확인해 주세요.';
+    }
+    return '화면을 그리는 중 오류가 났어요: ' + (err && err.message ? err.message : err);
+  }
+  function apiMsg(r, fallback) {
+    if (r.data && r.data.error) return r.data.error;
+    if (r.status === 404) return '서버에서 API를 찾지 못했어요. Worker 배포 상태를 확인해 주세요.';
+    return fallback;
+  }
+
+  /* ---------- 소유한 태그 목록: /api/tags/me 응답을 카드용으로 정리 (관리자는 카탈로그 전체가 owned/claimed=true 로 내려옴) ---------- */
+  function ownedList(d) {
+    var out = [];
+    d.tiers.filter(function (t) { return t.owned; }).forEach(function (t) {
+      out.push({ tag: { id: t.id, kind: 'tier', name: t.name, style: t.style }, kind: 'tier', desc: '누적 ' + Number(t.min).toLocaleString('ko-KR') + ' 스테이지' });
+    });
+    d.quests.filter(function (q) { return q.claimed; }).forEach(function (q) {
+      out.push({ tag: q.tag, kind: q.exclusive ? 'exclusive' : q.limited ? 'limited' : 'quest', desc: q.desc });
+    });
+    d.season_tags.forEach(function (t) { out.push({ tag: t, kind: 'season', desc: '랭킹 시상 태그' }); });
+    return out;
+  }
+
+  function equip(tagId, slot) {
+    state.busySlot = slot;
+    return api('/api/tags/equip', { method: 'POST', body: slot ? { tag_id: tagId, slot: slot } : { tag_id: tagId } }).then(function (r) {
+      state.busySlot = null;
+      if (!r.ok) { toast(apiMsg(r, '처리하지 못했어요.'), true); render(); return; }
+      state.data.equipped = r.data.equipped;
+      toast(tagId ? '태그를 장착했어요!' : '태그를 해제했어요.');
+      render();
+    }).catch(function (e) { state.busySlot = null; toast(errText(e), true); render(); });
+  }
+
+  function firstEmptySlot() {
+    var used = state.data.equipped.map(function (t, i) { return t ? null : i + 1; }).filter(Boolean);
+    return used.length ? used[0] : null;
+  }
+
+  /* ---------- 렌더 ---------- */
+  function slotBox(i) {
+    var slot = i + 1, tag = state.data.equipped[i];
+    var box = el('div', 'slot' + (tag ? ' filled' : ''));
+    if (tag) {
+      box.appendChild(pill(tag, 'lg'));
+      var off = el('button', 'pill pill--sm', state.busySlot === slot ? '해제 중…' : '해제');
+      off.type = 'button'; off.disabled = state.busySlot === slot;
+      off.addEventListener('click', function () { equip(null, slot); });
+      box.appendChild(off);
+    } else {
+      box.appendChild(el('div', 'slot-plus', '+'));
+      box.appendChild(el('div', 'slot-empty', '슬롯 ' + slot + ' 비어 있음'));
+    }
+    return box;
+  }
+
+  function equipButton(tag) {
+    var equippedAt = state.data.equipped.findIndex(function (t) { return t && t.id === tag.id; });
+    if (equippedAt !== -1) {
+      var off = el('button', 'pill pill--sm', state.busySlot === equippedAt + 1 ? '해제 중…' : '장착 해제');
+      off.type = 'button'; off.disabled = state.busySlot === equippedAt + 1;
+      off.addEventListener('click', function () { equip(null, equippedAt + 1); });
+      return off;
+    }
+    var full = state.data.equipped.every(Boolean);
+    var b = el('button', 'pill pill--sm' + (full ? '' : ' pill--mint'), full ? '슬롯 꽉 참' : '장착');
+    b.type = 'button'; b.disabled = full;
+    b.addEventListener('click', function () { equip(tag.id, firstEmptySlot()); });
+    return b;
+  }
+
+  function render() {
+    var root = $('#root'); root.textContent = '';
+    $('#nav-account').textContent = typeof Kiho !== 'undefined' && Kiho.isMember() ? '내 계정' : '로그인';
+    if (typeof Kiho !== 'undefined' && Kiho.isMember()) $('#nav-account').href = 'profile.html';
+
+    if (typeof Kiho === 'undefined' || !Kiho.isMember()) {
+      $('#admin-chip').hidden = true;
+      var box = el('section', 'glass empty');
+      box.appendChild(el('h3', '', '로그인하면 태그를 모으고 장착할 수 있어요'));
+      box.appendChild(el('p', '', '게스트는 태그를 가질 수 없어요.'));
+      var a = el('a', 'pill pill--mint', '로그인하러 가기'); a.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+      box.appendChild(a); root.appendChild(box); return;
+    }
+
+    if (state.status === 'loading') {
+      var l = el('section', 'glass state'); l.appendChild(el('h3', '', '불러오는 중…')); root.appendChild(l); return;
+    }
+    if (state.status === 'error') {
+      var e = el('section', 'glass state state--error'); e.appendChild(el('h3', '', '불러오지 못했어요')); e.appendChild(el('p', '', state.error));
+      var r = el('button', 'pill pill--mint', '다시 시도'); r.type = 'button'; r.addEventListener('click', load); e.appendChild(r); root.appendChild(e); return;
+    }
+
+    var d = state.data;
+    $('#admin-chip').hidden = !d.is_admin;
+    var owned = ownedList(d);
+
+    // 장착 슬롯 3개
+    var slotsSec = el('section', 'glass');
+    var sh = el('div', 'slots-h'); sh.appendChild(el('b', '', '장착 중')); sh.appendChild(el('span', '', d.equipped.filter(Boolean).length + ' / ' + EQUIP_SLOTS + '개 사용 중')); slotsSec.appendChild(sh);
+    var slots = el('div', 'slots');
+    for (var i = 0; i < EQUIP_SLOTS; i++) slots.appendChild(slotBox(i));
+    slotsSec.appendChild(slots);
+    root.appendChild(slotsSec);
+
+    // 목록
+    var sec = el('section', 'glass');
+    var h = el('div', 'sec-h');
+    h.appendChild(el('h2', '', '보유한 태그')); h.appendChild(el('span', '', d.is_admin ? owned.length + '개 (관리자 · 전체 보유)' : owned.length + '개 보유'));
+    sec.appendChild(h);
+
+    var kk = el('div', 'kinds');
+    KINDS.forEach(function (k) {
+      var count = k.id === 'all' ? owned.length : owned.filter(function (o) { return o.kind === k.id; }).length;
+      if (k.id === 'exclusive' && !count) return;   // 전용 칭호가 없는 계정에는 탭을 숨깁니다
+      var b = el('button', 'kind'); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(k.id === state.kind));
+      b.appendChild(document.createTextNode(k.name + ' ')); b.appendChild(el('b', '', String(count)));
+      b.addEventListener('click', function () { state.kind = k.id; render(); });
+      kk.appendChild(b);
+    });
+    sec.appendChild(kk);
+
+    var filtered = state.kind === 'all' ? owned : owned.filter(function (o) { return o.kind === state.kind; });
+    if (!filtered.length) {
+      var em = el('div', 'empty');
+      em.appendChild(el('h3', '', '아직 태그가 없어요'));
+      em.appendChild(el('p', '', state.kind === 'tier' ? '게임을 플레이해서 스테이지를 클리어하면 등급이 올라가요.'
+        : state.kind === 'season' ? '시즌이 끝나면 TOP 3 에게 지급돼요.' : '메인 화면 퀘스트에서 조건을 채우고 태그를 받아 보세요.'));
+      var go = el('a', 'pill pill--mint', state.kind === 'tier' ? '게임 하러 가기' : '퀘스트 보러 가기');
+      go.href = state.kind === 'tier' ? 'games.html' : 'games.html#quests';
+      em.appendChild(go); sec.appendChild(em);
+    } else {
+      var grid = el('div', 'grid');
+      filtered.forEach(function (o) {
+        var equipped = state.data.equipped.some(function (t) { return t && t.id === o.tag.id; });
+        var c = el('div', 'card' + (equipped ? ' is-equipped' : ''));
+        c.appendChild(pill(o.tag, 'lg'));
+        var b = el('div', 'card-b'); b.appendChild(el('b', '', o.tag.name)); b.appendChild(el('span', '', o.desc)); c.appendChild(b);
+        c.appendChild(equipButton(o.tag));
+        grid.appendChild(c);
+      });
+      sec.appendChild(grid);
+    }
+    root.appendChild(sec);
+  }
+
+  function load() {
+    state.status = 'loading'; render();
+    api('/api/tags/me').then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '태그 정보를 불러오지 못했어요.') };
+      state.data = r.data; state.status = 'ready';
+    }).catch(function (err) {
+      state.status = 'error'; state.error = err && err.friendly ? err.message : errText(err);
+    }).then(render);
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A2A3C">
+<title>내 프로필 - Kiho Labs</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+<style>
+  :root {
+    --bg:#0A2A3C; --ink:#F2F8FB; --ink-soft:#B9CDD8; --ink-faint:#8FAAB8;
+    --mint:#6FF2E0; --mint-ink:#062230; --danger:#FFA3B0; --ok:#9BF7CC;
+    --edge:rgba(255,255,255,.18); --field-bg:rgba(255,255,255,.07);
+    --r-card:28px; --r-ctrl:14px; --ease:cubic-bezier(.3,.8,.2,1);
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  body {
+    margin:0; min-height:100dvh;
+    background: linear-gradient(160deg,#0C3549 0%,#0A2A3C 48%,#071F2E 100%); background-attachment:fixed;
+    color:var(--ink); font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  a { color:inherit; } button, input, textarea { font-family:inherit; }
+  :focus-visible { outline:2px solid var(--mint); outline-offset:2px; }
+
+  .page { position:relative; min-height:100dvh; padding:24px 16px 72px; overflow:clip; }
+  .wrap { position:relative; z-index:1; width:min(860px,100%); margin:0 auto; }
+  .orbs { position:absolute; inset:0; z-index:0; pointer-events:none; }
+  .orb { position:absolute; border-radius:50%; }
+  .orb--mint { width:520px; height:520px; left:-240px; top:-120px; background:radial-gradient(circle,rgba(34,211,197,.7),rgba(34,211,197,0) 68%); }
+  .orb--cobalt { width:620px; height:620px; right:-300px; bottom:-260px; background:radial-gradient(circle,rgba(99,112,255,.8),rgba(99,112,255,0) 68%); }
+
+  .top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
+  .brand { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:700; letter-spacing:-.01em; text-decoration:none; }
+  .brand svg { width:30px; height:30px; }
+  .nav { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .pill { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:38px; padding:0 14px; border:0; border-radius:999px; text-decoration:none;
+    background:rgba(255,255,255,.1); color:var(--ink); box-shadow:inset 0 0 0 1px var(--edge); font-size:14px; font-weight:600; cursor:pointer; transition:filter .2s; }
+  .pill:hover:not(:disabled) { filter:brightness(1.12); }
+  .pill:disabled { opacity:.55; cursor:not-allowed; }
+  .pill--mint { background:var(--mint); color:var(--mint-ink); box-shadow:none; }
+  .pill--danger { color:var(--danger); }
+  .pill--sm { height:32px; padding:0 12px; font-size:13px; }
+
+  h1 { margin:0 0 4px; font-size:32px; font-weight:800; letter-spacing:-.03em; }
+  .lead { margin:0 0 20px; color:var(--ink-soft); font-size:15px; }
+
+  .glass { padding:20px 18px; border-radius:var(--r-card); background:linear-gradient(160deg,rgba(255,255,255,.15),rgba(255,255,255,.05));
+    -webkit-backdrop-filter:blur(26px) saturate(150%); backdrop-filter:blur(26px) saturate(150%);
+    box-shadow:0 30px 60px -20px rgba(2,12,20,.55),inset 0 1px 0 rgba(255,255,255,.25); margin-bottom:16px; }
+  .glass h2 { margin:0 0 4px; font-size:17px; font-weight:800; }
+  /* 접기/펼치기 (화살표) */
+  .sec-toggle { width:100%; display:flex; align-items:center; gap:12px; border:0; background:none; color:inherit; font:inherit; cursor:pointer; text-align:left; padding:0; margin:0; border-radius:12px; }
+  .sec-toggle h2 { flex:1; min-width:0; margin:0; }
+  .sec-toggle:hover { color:var(--mint); }
+  .sec-toggle:focus-visible { outline:2px solid var(--mint); outline-offset:4px; }
+  .sec-note { flex:none; font-size:12.5px; color:var(--ink-faint); font-weight:600; }
+  .chev { flex:none; width:22px; height:22px; color:var(--ink-soft); transition:transform .3s ease; }
+  .chev path { fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+  .sec-toggle[aria-expanded="true"] .chev, .cat-toggle[aria-expanded="true"] .chev { transform:rotate(180deg); }
+  .sec-toggle:hover .chev, .cat-toggle:hover .chev { color:var(--mint); }
+  .fold { display:grid; grid-template-rows:0fr; transition:grid-template-rows .38s ease; }
+  .fold.is-open { grid-template-rows:1fr; }
+  .fold-in { overflow:hidden; min-height:0; }
+  .glass > .fold > .fold-in > :first-child { padding-top:12px; }
+  .cat-toggle { width:100%; display:flex; align-items:center; gap:10px; border:0; background:none; color:var(--ink-soft); font:inherit; cursor:pointer; text-align:left; padding:0; margin:14px 0 8px; }
+  .cat-toggle .fr-cat { flex:1; margin:0; }
+  .cat-toggle .chev { width:18px; height:18px; }
+  .cat-toggle:hover { color:var(--mint); }
+  @media (prefers-reduced-motion:reduce) { .fold, .chev { transition:none; } }
+  .sub { margin:0 0 14px; font-size:13px; color:var(--ink-faint); }
+
+  /* 미리보기: 랭킹에 실제로 보이는 모양 */
+  .prev { display:flex; align-items:center; gap:12px; min-height:62px; padding:10px 16px; border-radius:16px; background:var(--field-bg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); margin-top:14px; }
+  .prev[data-bg] { box-shadow:inset 0 0 0 1px rgba(255,255,255,.24); }
+  .prev .kp-av { width:44px; height:44px; font-size:18px; background:linear-gradient(160deg,rgba(255,255,255,.22),rgba(255,255,255,.08)); box-shadow:inset 0 0 0 1px var(--edge); }
+  .prev-t { min-width:0; flex:1; }
+  .prev-n { font-size:16px; font-weight:700; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+  .prev-b { font-size:12.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+  .prev-s { font-size:18px; font-weight:800; font-variant-numeric:tabular-nums; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+
+  .row2 { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .big-av { padding-top:18px; } .big-av .kp-av { background:linear-gradient(160deg,#3b6a82,#1c4458); }
+  .hero { margin-bottom:16px; }
+  .fr-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:10px; }
+  .fr-opt { position:relative; display:grid; gap:6px; justify-items:center; padding:8px 8px 10px; border:0; border-radius:16px; background:var(--field-bg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); color:var(--ink); text-align:center; cursor:pointer; font-size:13px; }
+  .fr-opt:hover:not(:disabled) { background:rgba(255,255,255,.12); }
+  .fr-opt[aria-pressed="true"] { box-shadow:inset 0 0 0 2px var(--mint); }
+  .fr-opt[aria-pressed="true"]::after { content:"✓"; position:absolute; right:8px; top:8px; width:20px; height:20px; border-radius:50%; display:grid; place-items:center; background:var(--mint); color:var(--mint-ink); font-weight:800; font-size:12px; }
+  .fr-opt:disabled { cursor:not-allowed; }
+  .fr-opt:disabled .fr-prev { filter:grayscale(1) brightness(.5); }
+  .fr-opt:disabled .fr-prev * { animation-play-state:paused!important; }
+  .fr-prev { display:grid; place-items:center; width:100%; height:92px; padding-top:12px; border-radius:12px; background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.08),rgba(0,0,0,.28)); overflow:hidden; }
+  .fr-opt b { font-size:12.5px; line-height:1.3; overflow-wrap:anywhere; }
+  .fr-opt span.d { font-size:11px; color:var(--ink-faint); line-height:1.35; }
+  .fr-cat { margin:14px 2px 8px; font-size:12.5px; font-weight:700; color:var(--ink-soft); }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; }
+  .hint { margin:8px 0 0; font-size:12.5px; color:var(--ink-faint); }
+
+  label.f { display:block; margin:0 0 6px; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .in { width:100%; padding:11px 14px; border:0; border-radius:var(--r-ctrl); background:var(--field-bg); box-shadow:inset 0 0 0 1px var(--edge); color:var(--ink); font-size:15px; }
+  textarea.in { resize:vertical; min-height:74px; line-height:1.5; }
+  .in::placeholder { color:var(--ink-faint); }
+  .counter { margin-top:6px; text-align:right; font-size:12px; color:var(--ink-faint); font-variant-numeric:tabular-nums; }
+  .fields { display:grid; gap:12px; max-width:420px; }
+  .actions { display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .msg { font-size:13px; font-weight:600; } .msg--ok { color:var(--ok); } .msg--err { color:var(--danger); }
+
+  .bg-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+  .bg-opt { position:relative; display:grid; gap:6px; padding:8px; border:0; border-radius:16px; background:var(--field-bg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); color:var(--ink); text-align:left; cursor:pointer; font-size:13px; }
+  .bg-opt:hover:not(:disabled) { background:rgba(255,255,255,.12); }
+  .bg-opt .kbg-tile { height:56px; }
+  .bg-opt b { font-size:13px; line-height:1.3; overflow-wrap:anywhere; }
+  .bg-opt span { font-size:11.5px; color:var(--ink-faint); line-height:1.35; }
+  .bg-opt[aria-pressed="true"] { box-shadow:inset 0 0 0 2px var(--mint); }
+  .bg-opt[aria-pressed="true"]::after { content:"✓"; position:absolute; right:12px; top:12px; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:var(--mint); color:var(--mint-ink); font-weight:800; font-size:13px; }
+  .bg-opt:disabled { cursor:not-allowed; }
+  .bg-opt:disabled .kbg-tile { filter:grayscale(.9) brightness(.55); animation:none; }
+  .bg-opt:disabled b { color:var(--ink-soft); }
+  .link-more { display:inline-block; margin-top:12px; font-size:13.5px; color:var(--mint); font-weight:700; }
+
+  .state { text-align:center; padding:34px 12px; color:var(--ink-soft); }
+  .toast { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:20; transform:translateX(-50%); max-width:min(92vw,440px);
+    padding:12px 18px; border-radius:14px; font-size:14px; font-weight:600; color:#062230; background:var(--mint); box-shadow:0 14px 40px -10px rgba(0,0,0,.6); }
+  .toast--error { color:#fff; background:#c94a63; }
+
+  @media (max-width:560px) { h1 { font-size:26px; } .brand span { display:none; } .prev-s { display:none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="orbs" aria-hidden="true"><i class="orb orb--mint"></i><i class="orb orb--cobalt"></i></div>
+
+  <main class="wrap">
+    <header class="top">
+      <a class="brand" href="games.html" aria-label="메인 화면으로">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="12" cy="16" r="10" fill="#6FF2E0" fill-opacity=".85"/><circle cx="20" cy="16" r="10" fill="#7C8BFF" fill-opacity=".75"/></svg>
+        <span>Kiho Labs</span>
+      </a>
+      <nav class="nav">
+        <a class="pill" href="games.html">메인</a>
+        <a class="pill" href="leaderboard.html">리더보드</a>
+        <a class="pill" href="tags.html">내 태그</a>
+        <a class="pill" href="codex.html">도감</a>
+        <button class="pill" type="button" id="btn-logout">로그아웃</button>
+      </nav>
+    </header>
+
+    <h1>내 프로필</h1>
+    <p class="lead">사진·한마디·배경을 바꾸면 리더보드와 다른 사람이 보는 내 프로필에 바로 반영돼요.</p>
+
+    <div id="root"><div class="glass state">불러오는 중…</div></div>
+  </main>
+</div>
+
+<script src="kiho-sdk.js"></script>
+<script src="kiho-badge.js"></script>
+<script src="kiho-nav.js" defer></script>
+<script src="kiho-profile.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  if (typeof Kiho === 'undefined' || !Kiho.isMember()) { location.replace('login.html?next=' + encodeURIComponent('profile.html')); return; }
+
+  var $ = function (s) { return document.querySelector(s); };
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function fmt(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+
+  var BIO_MAX = 100;
+  var me = (Kiho.user() || {}).username || Kiho.displayName();
+  var S = { profile: null, bgs: null, frames: [], frameEq: 'plain', intros: [], introEq: 'plain', equipped: 'plain', busy: {} };
+  var refs = {};
+
+  function errText(err) {
+    if (err && err.name === 'AbortError') return '서버 응답이 늦어지고 있어요. 잠시 후 다시 시도해 주세요.';
+    try { console.error('[kiho]', err); } catch (e) {}
+    var isNet = err instanceof TypeError && /fetch|network|load failed|failed to/i.test(String(err.message));
+    if (isNet) {
+      var host = location.hostname;
+      if (location.protocol === 'file:' || !/(^|\.)kiholabs\.com$/.test(host))
+        return '이 주소(' + (host || '파일') + ')에서는 서버가 접속을 막아요. kiholabs.com 으로 접속해 주세요.';
+      return '서버에 연결하지 못했어요. 네트워크 상태를 확인해 주세요.';
+    }
+    return '화면을 그리는 중 오류가 났어요: ' + (err && err.message ? err.message : err);
+  }
+  function apiMsg(r, fallback) { return (r.data && r.data.error) || (r.status === 404 ? '서버에서 API를 찾지 못했어요. Worker 배포 상태를 확인해 주세요.' : fallback); }
+  function call(path, body) {
+    return KihoProfile.api(path, body === undefined ? undefined : { method: 'POST', body: body }).then(function (r) {
+      if (r.status === 401) { Kiho.logout(); location.replace('login.html?next=' + encodeURIComponent('profile.html')); throw { friendly: true, message: '로그인이 만료되었어요.' }; }
+      return r;
+    });
+  }
+  var toastTimer = null;
+  function toast(msg, isErr) {
+    var old = $('.toast'); if (old) old.remove();
+    var t = el('div', 'toast' + (isErr ? ' toast--error' : ''), msg); t.setAttribute('role', 'status'); document.body.appendChild(t);
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.remove(); }, 2600);
+  }
+  function setMsg(node, text, ok) { node.textContent = text || ''; node.className = 'msg ' + (text ? (ok ? 'msg--ok' : 'msg--err') : ''); }
+
+  /* ---------------- 미리보기 ---------------- */
+  var heroDone = false;
+  function renderHero() {
+    if (!refs.hero) return;
+    var p = Object.assign({}, S.profile, { bg: S.equipped === 'plain' ? null : S.equipped, is_me: false });
+    var first = !heroDone;
+    refs.heroCard = KihoProfile.mount(refs.hero, p, heroDone); heroDone = true;
+    if (first && S.profile.intro) KihoProfile.playIntro(refs.hero, refs.heroCard, S.profile.intro);
+  }
+  function renderPreview() {
+    renderHero();
+    var box = refs.prev; box.textContent = '';
+    var p = S.profile;
+    KihoProfile.applyBg(box, S.equipped === 'plain' ? null : S.equipped);
+    box.appendChild(KihoProfile.framed(KihoProfile.avatar(p.username, p.avatar, 0, 'av'), 36, p.frame, p.tier && p.tier.level));
+    var t = el('div', 'prev-t'); var n = el('div', 'prev-n');
+    if (window.KihoBadge) KihoBadge.render(n, p.username, { tags: p.tags }); else n.textContent = p.username;
+    t.appendChild(n); t.appendChild(el('div', 'prev-b', p.bio || '한마디가 없어요.')); box.appendChild(t);
+    box.appendChild(el('span', 'prev-s', '12,345'));
+  }
+
+  /* ---------------- 사진 ---------------- */
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file); var img = new Image();
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+      img.src = url;
+    });
+  }
+  // 가운데를 정사각형으로 잘라 줄이고 JPEG 로 저장 (서버 한도 60KB 아래로)
+  function shrink(img) {
+    var side = Math.min(img.naturalWidth, img.naturalHeight);
+    if (!side) throw new Error('empty image');
+    var sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
+    var sizes = [256, 192, 144, 112], quals = [0.86, 0.74, 0.62];
+    for (var i = 0; i < sizes.length; i++) {
+      var c = document.createElement('canvas'); c.width = c.height = sizes[i];
+      var g = c.getContext('2d'); g.fillStyle = '#1c4458'; g.fillRect(0, 0, c.width, c.height);
+      g.imageSmoothingQuality = 'high'; g.drawImage(img, sx, sy, side, side, 0, 0, c.width, c.height);
+      for (var j = 0; j < quals.length; j++) {
+        var url = c.toDataURL('image/jpeg', quals[j]);
+        if (url.length * 0.75 <= 55 * 1024) return url;
+      }
+    }
+    throw new Error('too large');
+  }
+
+  function onPickFile(file) {
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp|gif|bmp)$/i.test(file.type)) { setMsg(refs.avMsg, 'JPG·PNG·WEBP 사진을 골라 주세요.'); return; }
+    if (file.size > 12 * 1024 * 1024) { setMsg(refs.avMsg, '사진이 너무 커요. (12MB 이하)'); return; }
+    refs.avBtn.disabled = true; setMsg(refs.avMsg, '올리는 중…', true);
+    loadImage(file).then(shrink).then(function (dataUrl) {
+      return call('/api/profile/avatar', { image: dataUrl });
+    }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '사진을 올리지 못했어요.') };
+      S.profile.avatar = r.data.avatar; renderAvatar(); renderPreview(); setMsg(refs.avMsg, '프로필 사진을 바꿨어요.', true);
+    }).catch(function (err) {
+      setMsg(refs.avMsg, err && err.friendly ? err.message : (err && err.message === 'too large' ? '사진을 충분히 줄이지 못했어요. 다른 사진을 써 주세요.' : (err && err.message ? '이 사진은 읽을 수 없어요.' : errText(err))));
+    }).then(function () { refs.avBtn.disabled = false; refs.file.value = ''; });
+  }
+
+  function renderAvatar() {
+    refs.bigAv.textContent = ''; refs.bigAv.appendChild(KihoProfile.framed(KihoProfile.avatar(S.profile.username, S.profile.avatar, 0), 88, S.profile.frame, S.profile.tier && S.profile.tier.level));
+    refs.avDel.hidden = !S.profile.avatar;
+  }
+
+  /* ---------------- 테두리 ---------------- */
+  var FR_CATS = [['basic', '기본'], ['tier', '등급 테두리'], ['tag', '태그 테두리'], ['rank', '순위 테두리'], ['exclusive', '전용 테두리']];
+  function renderFrameGrid() {
+    var box = refs.frWrap; box.textContent = '';
+    FR_CATS.forEach(function (cat) {
+      var items = (S.frames || []).filter(function (f) { return f.category === cat[0]; });
+      if (!items.length) return;
+      var grid = el('div', 'fr-grid');
+      catBlock(box, 'fr-' + cat[0], cat[1] + ' · ' + items.filter(function (f) { return f.owned; }).length + '/' + items.length, items.some(function (f) { return f.id === S.frameEq; }), grid);
+      items.forEach(function (f) {
+        var btn = el('button', 'fr-opt'); btn.type = 'button';
+        btn.setAttribute('aria-pressed', String(f.id === S.frameEq));
+        btn.disabled = !f.owned; btn.title = f.owned ? f.name : f.unlock_label;
+        var prev = el('div', 'fr-prev');
+        prev.appendChild(KihoProfile.framed(KihoProfile.avatar(S.profile.username, S.profile.avatar, 0), 46, f.id === 'plain' ? null : f.id, S.profile.tier && S.profile.tier.level));
+        btn.appendChild(prev); btn.appendChild(el('b', '', f.name));
+        btn.appendChild(el('span', 'd', f.owned ? f.desc : '🔒 ' + f.unlock_label));
+        btn.addEventListener('click', function () { equipFrame(f.id); });
+        grid.appendChild(btn);
+      });
+    });
+  }
+
+  function equipFrame(id) {
+    if (id === S.frameEq || S.busy.fr) return;
+    S.busy.fr = true; var prev = S.frameEq; S.frameEq = id; renderFrameGrid();
+    call('/api/frames/equip', { frame_id: id }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '테두리를 바꾸지 못했어요.') };
+      return call('/api/profile?u=' + encodeURIComponent(me));
+    }).then(function (r) {
+      if (r.ok) { S.profile = r.data.profile; }
+      renderAvatar(); renderPreview(); toast('테두리를 바꿨어요.');
+    }).catch(function (err) {
+      S.frameEq = prev; renderFrameGrid(); toast(err && err.friendly ? err.message : errText(err), true);
+    }).then(function () { S.busy.fr = false; });
+  }
+
+  /* ---------------- 입장 애니메이션 ---------------- */
+  var IN_CATS = [['basic', '기본'], ['tier', '등급 입장'], ['tag', '태그 입장'], ['rank', '순위 입장'], ['exclusive', '전용 입장']];
+  var IN_ICON = { basic: '◌', tier: '✦', tag: '✿', rank: '★', exclusive: '☠' };
+  function renderIntroGrid() {
+    var box = refs.inWrap; box.textContent = '';
+    IN_CATS.forEach(function (cat) {
+      var items = (S.intros || []).filter(function (f) { return f.category === cat[0]; });
+      if (!items.length) return;
+      var grid = el('div', 'fr-grid');
+      catBlock(box, 'in-' + cat[0], cat[1] + ' · ' + items.filter(function (f) { return f.owned; }).length + '/' + items.length, items.some(function (f) { return f.id === S.introEq; }), grid);
+      items.forEach(function (f) {
+        var cell = el('div');
+        var btn = el('button', 'fr-opt'); btn.type = 'button';
+        btn.setAttribute('aria-pressed', String(f.id === S.introEq));
+        btn.disabled = !f.owned; btn.title = f.owned ? f.name : f.unlock_label;
+        btn.appendChild(el('div', 'fr-prev', IN_ICON[f.category] || '✦')); btn.appendChild(el('b', '', f.name));
+        btn.appendChild(el('span', 'd', f.owned ? f.desc : '🔒 ' + f.unlock_label));
+        btn.addEventListener('click', function () { equipIntro(f.id); });
+        cell.appendChild(btn);
+        var pv = el('button', 'link-more', '▶ 미리보기'); pv.type = 'button'; pv.style.cssText = 'display:block;margin:4px auto 0;background:none;border:0;cursor:pointer;font:inherit';
+        pv.addEventListener('click', function () {
+          if (refs.hero) refs.hero.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          KihoProfile.playIntro(refs.hero, refs.heroCard, f.id);
+        });
+        cell.appendChild(pv); grid.appendChild(cell);
+      });
+    });
+  }
+
+  function equipIntro(id) {
+    if (id === S.introEq || S.busy.in) return;
+    S.busy.in = true; var prev = S.introEq; S.introEq = id; renderIntroGrid();
+    call('/api/intros/equip', { intro_id: id }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '입장 효과를 바꾸지 못했어요.') };
+      return call('/api/profile?u=' + encodeURIComponent(me));
+    }).then(function (r) {
+      if (r.ok) { S.profile = r.data.profile; }
+      renderPreview(); KihoProfile.playIntro(refs.hero, refs.heroCard, id === 'plain' ? null : id); toast('입장 효과를 바꿨어요.');
+    }).catch(function (err) {
+      S.introEq = prev; renderIntroGrid(); toast(err && err.friendly ? err.message : errText(err), true);
+    }).then(function () { S.busy.in = false; });
+  }
+
+  /* ---------------- 배경 ---------------- */
+  function renderBgGrid() {
+    var grid = refs.bgGrid; grid.textContent = '';
+    S.bgs.forEach(function (b) {
+      var btn = el('button', 'bg-opt'); btn.type = 'button';
+      btn.setAttribute('aria-pressed', String(b.id === S.equipped));
+      btn.disabled = !b.owned; btn.title = b.owned ? b.name : b.unlock_label;
+      btn.appendChild(KihoProfile.bgTile(b.id === 'plain' ? null : b.id));
+      btn.appendChild(el('b', '', b.name));
+      btn.appendChild(el('span', '', b.owned ? b.desc : '🔒 ' + b.unlock_label));
+      btn.addEventListener('click', function () { equipBg(b.id); });
+      grid.appendChild(btn);
+    });
+  }
+
+  function equipBg(id) {
+    if (id === S.equipped || S.busy.bg) return;
+    S.busy.bg = true; var prev = S.equipped; S.equipped = id; renderBgGrid(); renderPreview();
+    call('/api/backgrounds/equip', { bg_id: id }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '배경을 바꾸지 못했어요.') };
+      toast('배경을 바꿨어요.');
+    }).catch(function (err) {
+      S.equipped = prev; renderBgGrid(); renderPreview(); toast(err && err.friendly ? err.message : errText(err), true);
+    }).then(function () { S.busy.bg = false; });
+  }
+
+  /* ---------------- 한마디 ---------------- */
+  function updateCounter() { refs.counter.textContent = [].concat(Array.from(refs.bio.value)).length + ' / ' + BIO_MAX; }
+  function saveBio() {
+    var text = refs.bio.value;
+    refs.bioBtn.disabled = true; setMsg(refs.bioMsg, '');
+    call('/api/profile', { bio: text }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '저장하지 못했어요.') };
+      S.profile.bio = r.data.bio; refs.bio.value = r.data.bio; updateCounter(); renderPreview(); setMsg(refs.bioMsg, '저장했어요.', true);
+    }).catch(function (err) { setMsg(refs.bioMsg, err && err.friendly ? err.message : errText(err)); })
+      .then(function () { refs.bioBtn.disabled = false; });
+  }
+
+  /* ---------------- 비밀번호 ---------------- */
+  function pwProblem(pw) {
+    if (pw.length < 8) return '새 비밀번호는 8자 이상이어야 해요.';
+    if (pw.length >= 20) return '새 비밀번호는 20자 미만(최대 19자)이어야 해요.';
+    if (!/[A-Za-z]/.test(pw) || !/\d/.test(pw)) return '새 비밀번호에는 영문과 숫자가 모두 들어가야 해요.';
+    return '';
+  }
+  function changePw(e) {
+    e.preventDefault();
+    var cur = refs.pwCur.value, nw = refs.pwNew.value, cf = refs.pwConf.value;
+    setMsg(refs.pwMsg, '');
+    if (!cur) return setMsg(refs.pwMsg, '현재 비밀번호를 입력해 주세요.');
+    var prob = pwProblem(nw); if (prob) return setMsg(refs.pwMsg, prob);
+    if (nw !== cf) return setMsg(refs.pwMsg, '새 비밀번호 확인이 일치하지 않아요.');
+    if (nw === cur) return setMsg(refs.pwMsg, '새 비밀번호가 현재 비밀번호와 같아요.');
+    refs.pwBtn.disabled = true;
+    call('/api/password', { current_password: cur, new_password: nw }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '비밀번호를 바꾸지 못했어요.') };
+      refs.pwCur.value = refs.pwNew.value = refs.pwConf.value = '';
+      setMsg(refs.pwMsg, '비밀번호를 바꿨어요. 다음 로그인부터 새 비밀번호를 쓰세요.', true);
+    }).catch(function (err) { setMsg(refs.pwMsg, err && err.friendly ? err.message : errText(err)); })
+      .then(function () { refs.pwBtn.disabled = false; });
+  }
+
+  /* ---------------- 화면 조립 ---------------- */
+  function chevSvg() { var n = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); n.setAttribute('class', 'chev'); n.setAttribute('viewBox', '0 0 24 24'); n.setAttribute('aria-hidden', 'true');
+    var p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', 'M6 9l6 6 6-6'); n.appendChild(p); return n; }
+  function pget(k) { try { return localStorage.getItem('kiho.prof.' + k); } catch (e) { return null; } }
+  function pset(k, v) { try { localStorage.setItem('kiho.prof.' + k, v); } catch (e) {} }
+  function setFold(btn, fold, open, key) { btn.setAttribute('aria-expanded', String(open)); fold.classList.toggle('is-open', open); if (key) pset(key, open ? '1' : '0'); }
+  /* 제목을 누르면 접고 펼 수 있는 섹션. defOpen: 처음 상태(저장된 값이 있으면 그걸 따름) */
+  function section(title, sub, key, defOpen) {
+    var s = el('section', 'glass');
+    if (!key) { s.appendChild(el('h2', '', title)); if (sub) s.appendChild(el('p', 'sub', sub)); return s; }
+    var btn = el('button', 'sec-toggle'); btn.type = 'button';
+    btn.appendChild(el('h2', '', title)); btn.appendChild(chevSvg());
+    var fold = el('div', 'fold'), inner = el('div', 'fold-in'); fold.appendChild(inner);
+    var id = 'fold-' + key; fold.id = id; btn.setAttribute('aria-controls', id);
+    var saved = pget(key); setFold(btn, fold, saved == null ? !!defOpen : saved === '1');
+    btn.addEventListener('click', function () { setFold(btn, fold, btn.getAttribute('aria-expanded') !== 'true', key); });
+    s.appendChild(btn); s.appendChild(fold);
+    s.appendChild = function (n) { return inner.appendChild(n); };
+    if (sub) inner.appendChild(el('p', 'sub', sub));
+    return s;
+  }
+  /* 카테고리 소제목(테두리/입장 효과 목록용)도 접고 펼 수 있게 */
+  S.catOpen = S.catOpen || {};
+  function catBlock(box, key, label, hasEquipped, grid) {
+    var open = S.catOpen[key] == null ? hasEquipped : S.catOpen[key];
+    var btn = el('button', 'cat-toggle'); btn.type = 'button'; btn.appendChild(el('div', 'fr-cat', label)); btn.appendChild(chevSvg());
+    var fold = el('div', 'fold'), inner = el('div', 'fold-in'); inner.appendChild(grid); fold.appendChild(inner);
+    setFold(btn, fold, open);
+    btn.addEventListener('click', function () { var o = btn.getAttribute('aria-expanded') !== 'true'; S.catOpen[key] = o; setFold(btn, fold, o); });
+    box.appendChild(btn); box.appendChild(fold);
+  }
+
+  function build() {
+    var root = $('#root'); root.textContent = '';
+
+    refs.hero = el('div', 'hero'); root.appendChild(refs.hero);
+
+    var s0 = section('미리보기', '리더보드에서 내 줄이 이렇게 보여요.', 'prev', true);
+    refs.prev = el('div', 'prev'); s0.appendChild(refs.prev);
+    var view = el('button', 'pill pill--sm', '다른 사람에게 보이는 내 프로필 열기'); view.type = 'button'; view.style.marginTop = '12px';
+    view.addEventListener('click', function () { KihoProfile.open(S.profile.username); });
+    s0.appendChild(view); root.appendChild(s0);
+
+    var s1 = section('프로필 사진', '정사각형으로 잘라서 올라가요. 올리는 사진은 다른 사람에게도 보여요.', 'avatar', true);
+    var r1 = el('div', 'row2'); refs.bigAv = el('div', 'big-av'); r1.appendChild(refs.bigAv);
+    var bt = el('div'); var btns = el('div', 'btns');
+    refs.file = el('input'); refs.file.type = 'file'; refs.file.accept = 'image/jpeg,image/png,image/webp'; refs.file.hidden = true;
+    refs.file.addEventListener('change', function () { onPickFile(refs.file.files && refs.file.files[0]); });
+    refs.avBtn = el('button', 'pill pill--mint', '사진 바꾸기'); refs.avBtn.type = 'button'; refs.avBtn.addEventListener('click', function () { refs.file.click(); });
+    refs.avDel = el('button', 'pill', '사진 지우기'); refs.avDel.type = 'button';
+    refs.avDel.addEventListener('click', function () {
+      refs.avDel.disabled = true;
+      call('/api/profile/avatar', { remove: true }).then(function (r) {
+        if (!r.ok) throw { friendly: true, message: apiMsg(r, '사진을 지우지 못했어요.') };
+        S.profile.avatar = null; renderAvatar(); renderPreview(); setMsg(refs.avMsg, '프로필 사진을 지웠어요.', true);
+      }).catch(function (err) { setMsg(refs.avMsg, err && err.friendly ? err.message : errText(err)); }).then(function () { refs.avDel.disabled = false; });
+    });
+    btns.appendChild(refs.avBtn); btns.appendChild(refs.avDel); bt.appendChild(btns); bt.appendChild(refs.file);
+    refs.avMsg = el('p', 'msg'); refs.avMsg.style.margin = '10px 0 0'; bt.appendChild(refs.avMsg);
+    r1.appendChild(bt); s1.appendChild(r1); root.appendChild(s1);
+
+    var s2 = section('한마디', '내 프로필에 보여줄 소개를 적어 보세요. (최대 ' + BIO_MAX + '자)', 'bio', true);
+    refs.bio = el('textarea', 'in'); refs.bio.maxLength = BIO_MAX * 2; refs.bio.placeholder = '예) 퍼펙트 클리어 도전 중!'; refs.bio.value = S.profile.bio || '';
+    refs.bio.setAttribute('aria-label', '한마디'); refs.bio.addEventListener('input', updateCounter);
+    s2.appendChild(refs.bio); refs.counter = el('div', 'counter'); s2.appendChild(refs.counter); updateCounter();
+    var a2 = el('div', 'actions'); refs.bioBtn = el('button', 'pill pill--mint', '저장'); refs.bioBtn.type = 'button'; refs.bioBtn.addEventListener('click', saveBio);
+    refs.bioMsg = el('span', 'msg'); a2.appendChild(refs.bioBtn); a2.appendChild(refs.bioMsg); s2.appendChild(a2); root.appendChild(s2);
+
+    var s3 = section('배경', '고르면 바로 적용돼요. 잠긴 배경은 등급을 올리거나 태그를 모으면 열려요.', 'bg', false);
+    refs.bgGrid = el('div', 'bg-grid'); s3.appendChild(refs.bgGrid);
+    var more = el('a', 'link-more', '배경 도감에서 전체 보기 →'); more.href = 'codex.html?type=bg'; s3.appendChild(more);
+    root.appendChild(s3);
+
+    var s3b = section('테두리', '사진 둘레의 테두리예요. 등급·태그·순위에 따라 열리고, 고르면 바로 적용돼요. "자동"은 순위·등급에 맞춰 알아서 붙어요.', 'frame', false);
+    refs.frWrap = el('div'); s3b.appendChild(refs.frWrap);
+    var moreF = el('a', 'link-more', '테두리 도감에서 전체 보기 →'); moreF.href = 'codex.html?type=frame'; s3b.appendChild(moreF);
+    root.appendChild(s3b);
+
+    var s3c = section('입장 애니메이션', '내 프로필을 열었을 때 나오는 연출이에요. 등급·태그·순위를 달성하면 열려요. ▶ 로 미리 볼 수 있어요.', 'intro', false);
+    refs.inWrap = el('div'); s3c.appendChild(refs.inWrap);
+    var moreI = el('a', 'link-more', '입장 효과 도감에서 전체 보기 →'); moreI.href = 'codex.html?type=intro'; s3c.appendChild(moreI);
+    root.appendChild(s3c);
+
+    var s4 = section('비밀번호 변경', '8자 이상 20자 미만, 영문과 숫자를 모두 포함해야 해요.', 'pw', false);
+    var form = el('form'); form.noValidate = true; form.addEventListener('submit', changePw);
+    var fields = el('div', 'fields');
+    function field(id, label, auto) {
+      var w = el('div'); var l = el('label', 'f', label); l.htmlFor = id; var i = el('input', 'in'); i.type = 'password'; i.id = id; i.autocomplete = auto; i.maxLength = 64;
+      w.appendChild(l); w.appendChild(i); fields.appendChild(w); return i;
+    }
+    // 아이디 칸(숨김) — 비밀번호 관리자가 어떤 계정의 비밀번호인지 알 수 있게
+    var u = el('input'); u.type = 'text'; u.value = S.profile.username; u.autocomplete = 'username'; u.hidden = true; u.readOnly = true; form.appendChild(u);
+    refs.pwCur = field('pw-cur', '현재 비밀번호', 'current-password');
+    refs.pwNew = field('pw-new', '새 비밀번호', 'new-password');
+    refs.pwConf = field('pw-conf', '새 비밀번호 확인', 'new-password');
+    form.appendChild(fields);
+    var a4 = el('div', 'actions'); refs.pwBtn = el('button', 'pill pill--mint', '비밀번호 바꾸기'); refs.pwBtn.type = 'submit';
+    refs.pwMsg = el('span', 'msg'); a4.appendChild(refs.pwBtn); a4.appendChild(refs.pwMsg); form.appendChild(a4);
+    s4.appendChild(form); root.appendChild(s4);
+
+    renderPreview(); renderAvatar(); renderBgGrid(); renderFrameGrid(); renderIntroGrid();
+  }
+
+  function fail(msg) {
+    var root = $('#root'); root.textContent = '';
+    var b = el('div', 'glass state'); b.appendChild(el('p', '', msg));
+    var r = el('button', 'pill pill--mint', '다시 시도'); r.type = 'button'; r.addEventListener('click', load); b.appendChild(r); root.appendChild(b);
+  }
+
+  function load() {
+    Promise.all([call('/api/profile?u=' + encodeURIComponent(me)), call('/api/backgrounds'), call('/api/frames'), call('/api/intros')]).then(function (rs) {
+      if (!rs[0].ok) throw { friendly: true, message: apiMsg(rs[0], '프로필을 불러오지 못했어요.') };
+      if (!rs[1].ok) throw { friendly: true, message: apiMsg(rs[1], '배경 목록을 불러오지 못했어요.') };
+      S.profile = rs[0].data.profile; S.bgs = rs[1].data.backgrounds; S.equipped = rs[1].data.equipped || 'plain';
+      S.frames = rs[2].ok ? rs[2].data.frames : []; S.frameEq = rs[2].ok ? (rs[2].data.equipped || 'plain') : 'plain';
+      S.intros = rs[3].ok ? rs[3].data.intros : []; S.introEq = rs[3].ok ? (rs[3].data.equipped || 'plain') : 'plain';
+      build();
+    }).catch(function (err) { fail(err && err.friendly ? err.message : errText(err)); });
+  }
+
+  $('#btn-logout').addEventListener('click', function () { Kiho.logout(); location.assign('login.html'); });
+  load();
+})();
+</script>
+</body>
+</html>

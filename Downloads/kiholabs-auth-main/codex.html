@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A2A3C">
+<title>도감 - Kiho Labs</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+<style>
+  :root {
+    --bg:#0A2A3C; --ink:#F2F8FB; --ink-soft:#B9CDD8; --ink-faint:#8FAAB8;
+    --mint:#6FF2E0; --mint-ink:#062230; --danger:#FFA3B0; --ok:#9BF7CC;
+    --edge:rgba(255,255,255,.18); --field-bg:rgba(255,255,255,.07);
+    --r-card:28px; --r-ctrl:14px; --ease:cubic-bezier(.3,.8,.2,1);
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  body {
+    margin:0; min-height:100dvh;
+    background: linear-gradient(160deg,#0C3549 0%,#0A2A3C 48%,#071F2E 100%); background-attachment:fixed;
+    color:var(--ink); font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  a { color:inherit; } button { font-family:inherit; }
+  :focus-visible { outline:2px solid var(--mint); outline-offset:2px; }
+
+  .page { position:relative; min-height:100dvh; padding:24px 16px 72px; overflow:clip; }
+  .wrap { position:relative; z-index:1; width:min(1040px,100%); margin:0 auto; }
+  .orbs { position:absolute; inset:0; z-index:0; pointer-events:none; }
+  .orb { position:absolute; border-radius:50%; }
+  .orb--mint { width:520px; height:520px; left:-240px; top:-120px; background:radial-gradient(circle,rgba(34,211,197,.7),rgba(34,211,197,0) 68%); }
+  .orb--cobalt { width:620px; height:620px; right:-300px; bottom:-260px; background:radial-gradient(circle,rgba(99,112,255,.8),rgba(99,112,255,0) 68%); }
+  .orb--coral { width:300px; height:300px; left:12%; bottom:-150px; background:radial-gradient(circle,rgba(255,122,144,.7),rgba(255,122,144,0) 68%); }
+
+  .top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
+  .brand { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:700; letter-spacing:-.01em; text-decoration:none; }
+  .brand svg { width:30px; height:30px; }
+  .nav { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .pill { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:38px; padding:0 14px; border:0; border-radius:999px; text-decoration:none;
+    background:rgba(255,255,255,.1); color:var(--ink); box-shadow:inset 0 0 0 1px var(--edge); font-size:14px; font-weight:600; cursor:pointer; transition:filter .2s; }
+  .pill:hover { filter:brightness(1.12); }
+  .pill--mint { background:var(--mint); color:var(--mint-ink); box-shadow:none; }
+  .pill--sm { height:32px; padding:0 12px; font-size:13px; }
+
+  .title-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+  h1 { margin:0; font-size:32px; font-weight:800; letter-spacing:-.03em; }
+  .count-chip { padding:4px 12px; border-radius:999px; font-size:13px; font-weight:700; color:var(--ink-soft); background:var(--field-bg); box-shadow:inset 0 0 0 1px var(--edge); }
+  .lead { margin:0 0 20px; color:var(--ink-soft); font-size:15px; } .lead a { color:var(--mint); font-weight:700; }
+
+  .controls { display:grid; gap:12px; margin-bottom:18px; }
+  .search { position:relative; }
+  .search input {
+    width:100%; height:46px; padding:0 16px 0 44px; border:0; border-radius:16px;
+    background:var(--field-bg); box-shadow:inset 0 0 0 1px var(--edge); color:var(--ink); font:inherit; font-size:15px;
+  }
+  .search input::placeholder { color:var(--ink-faint); }
+  .search svg { position:absolute; left:15px; top:50%; transform:translateY(-50%); width:18px; height:18px; fill:none; stroke:var(--ink-faint); stroke-width:2; }
+
+  .tabs { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { flex:none; display:inline-flex; align-items:center; gap:7px; height:40px; padding:0 15px; border:0; border-radius:999px;
+    background:var(--field-bg); color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--edge); font-size:13.5px; font-weight:600; cursor:pointer; transition:background .18s,color .18s; }
+  .tab:hover { background:rgba(255,255,255,.12); color:var(--ink); }
+  .tab[aria-selected="true"] { color:var(--ink); background:rgba(255,255,255,.14); box-shadow:inset 0 0 0 2px var(--mint); }
+  .tab b { font-variant-numeric:tabular-nums; color:var(--ink-faint); font-weight:600; } .tab[aria-selected="true"] b { color:var(--mint); }
+
+  .toggle-row { display:flex; align-items:center; gap:8px; }
+  .switch { display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 14px 0 6px; border-radius:999px; background:var(--field-bg); box-shadow:inset 0 0 0 1px var(--edge); font-size:13.5px; color:var(--ink-soft); cursor:pointer; user-select:none; }
+  .switch input { appearance:none; width:34px; height:20px; border-radius:999px; background:rgba(255,255,255,.18); position:relative; cursor:pointer; flex:none; }
+  .switch input::after { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .18s var(--ease); }
+  .switch input:checked { background:var(--mint); } .switch input:checked::after { transform:translateX(14px); }
+
+  .glass { padding:20px 18px; border-radius:var(--r-card); background:linear-gradient(160deg,rgba(255,255,255,.15),rgba(255,255,255,.05));
+    -webkit-backdrop-filter:blur(26px) saturate(150%); backdrop-filter:blur(26px) saturate(150%);
+    box-shadow:0 30px 60px -20px rgba(2,12,20,.55),inset 0 1px 0 rgba(255,255,255,.25); margin-bottom:16px; }
+  .cat-title { display:flex; align-items:baseline; gap:10px; margin:0 4px 12px; }
+  .cat-title h2 { margin:0; font-size:17px; font-weight:800; } .cat-title span { font-size:12.5px; color:var(--ink-faint); }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:10px; }
+  .entry {
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px;
+    padding:12px 14px; border-radius:16px; background:var(--field-bg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);
+  }
+  .entry.owned { box-shadow:inset 0 0 0 1.5px rgba(155,247,204,.5); }
+  .entry.locked .kt { filter:grayscale(.85) brightness(.65); animation:none; }
+  .entry.locked .kt::after { display:none; }
+  .entry > .kt { flex:none; }
+  .entry-b { flex:1 1 140px; min-width:110px; }
+  .entry-b b { display:block; font-size:14.5px; overflow-wrap:anywhere; }
+  .entry-b span { display:block; font-size:12px; color:var(--ink-faint); margin-top:2px; }
+  .entry-state { flex:none; font-size:12px; font-weight:700; }
+  .entry.owned .entry-state { color:var(--ok); } .entry.locked .entry-state { color:var(--ink-faint); }
+
+  .mode-tabs { margin-bottom:14px; }
+  .mode-tabs .tab { height:44px; padding:0 20px; font-size:15px; font-weight:700; }
+  .bg-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .bg-entry { display:grid; gap:10px; padding:12px; border-radius:18px; background:var(--field-bg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); }
+  .bg-entry.owned { box-shadow:inset 0 0 0 1.5px rgba(155,247,204,.5); }
+  .bg-entry.equipped { box-shadow:inset 0 0 0 2px var(--mint); }
+  .bg-entry.locked .kbg-tile { filter:grayscale(.9) brightness(.55); animation:none; }
+  .bg-prev { position:relative; display:flex; align-items:center; gap:10px; height:62px; padding:0 14px; border-radius:14px; overflow:hidden; }
+  .bg-prev .kbg-tile { position:absolute; inset:0; height:100%; border-radius:14px; }
+  .bg-prev .kp-av, .bg-prev b { position:relative; z-index:1; }
+  .bg-prev .kp-av { width:34px; height:34px; font-size:14px; background:rgba(255,255,255,.16); }
+  .bg-prev b { font-size:14px; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+  .bg-entry .entry-b { flex:none; min-width:0; }
+  .fr-prev { display:grid; place-items:center; height:96px; padding-top:14px; border-radius:14px; background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.08),rgba(0,0,0,.3)); overflow:hidden; }
+  .fr-entry b.fr-name { font-size:14px; }
+  .bg-entry.locked .fr-prev { filter:grayscale(1) brightness(.5); }
+  .bg-entry.locked .fr-prev * { animation-play-state:paused!important; }
+  .bg-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .bg-foot .entry-state { max-width:60%; }
+  .note { padding:16px 18px; border-radius:18px; background:var(--field-bg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); font-size:13.5px; color:var(--ink-soft); }
+  .note a { color:var(--mint); font-weight:700; }
+
+  .state { text-align:center; padding:34px 12px; color:var(--ink-soft); }
+  .state h3 { margin:0 0 6px; font-size:18px; color:var(--ink); } .state p { margin:0 0 16px; font-size:14px; } .state--error h3 { color:var(--danger); }
+  .empty { text-align:center; padding:24px 12px; color:var(--ink-faint); font-size:14px; }
+
+  @media (max-width:560px) { h1 { font-size:26px; } .brand span { display:none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="orbs" aria-hidden="true"><i class="orb orb--mint"></i><i class="orb orb--cobalt"></i><i class="orb orb--coral"></i></div>
+
+  <main class="wrap">
+    <header class="top">
+      <a class="brand" href="games.html" aria-label="메인 화면으로">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="12" cy="16" r="10" fill="#6FF2E0" fill-opacity=".85"/><circle cx="20" cy="16" r="10" fill="#7C8BFF" fill-opacity=".75"/></svg>
+        <span>Kiho Labs</span>
+      </a>
+      <nav class="nav">
+        <a class="pill" href="games.html">메인</a>
+        <a class="pill" href="leaderboard.html">리더보드</a>
+        <a class="pill pill--mint" id="nav-account" href="login.html">로그인</a>
+      </nav>
+    </header>
+
+    <div class="title-row"><h1 id="page-title">태그 도감</h1><span class="count-chip" id="count-chip">불러오는 중…</span></div>
+    <p class="lead" id="page-lead"></p>
+    <div class="tabs mode-tabs" id="mode-tabs" role="tablist" aria-label="도감 종류"></div>
+
+    <div class="controls">
+      <label class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="q" placeholder="이름으로 검색…" autocomplete="off">
+      </label>
+      <div class="tabs" role="tablist" aria-label="종류" id="kind-tabs"></div>
+      <div class="toggle-row">
+        <label class="switch"><input type="checkbox" id="only-locked"><span>아직 못 가진 것만</span></label>
+      </div>
+    </div>
+
+    <div id="root"></div>
+  </main>
+</div>
+
+<script src="kiho-sdk.js"></script>
+<script src="kiho-badge.js"></script>
+<script src="kiho-nav.js" defer></script>
+<script src="kiho-profile.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var API_BASE = (typeof Kiho !== 'undefined' && Kiho.CONFIG && Kiho.CONFIG.API_BASE) || 'https://api.kiholabs.com';
+  var $ = function (s) { return document.querySelector(s); };
+
+  var KINDS = [
+    { id: 'all', name: '전체' },
+    { id: 'tier', name: '등급' },
+    { id: 'cleared', name: '완주' },
+    { id: 'stages', name: '누적 스테이지' },
+    { id: 'difficulty', name: '난이도별' },
+    { id: 'perfect', name: '퍼펙트' },
+    { id: 'combo', name: '콤보' },
+    { id: 'played', name: '플레이 횟수' },
+    { id: 'rank', name: '랭킹' },
+    { id: 'speed', name: '스피드런' },
+    { id: 'flavor', name: '플레이버' },
+    { id: 'special', name: '종합' },
+    { id: 'limited', name: '한정판' },
+    { id: 'exclusive', name: '전용' }
+  ];
+
+  var BG_KINDS = [
+    { id: 'all', name: '전체' }, { id: 'basic', name: '기본' }, { id: 'tier', name: '등급' },
+    { id: 'tag', name: '태그' }, { id: 'exclusive', name: '전용' }
+  ];
+  var FR_KINDS = [
+    { id: 'all', name: '전체' }, { id: 'basic', name: '기본' }, { id: 'tier', name: '등급' },
+    { id: 'tag', name: '태그' }, { id: 'rank', name: '순위' }, { id: 'exclusive', name: '전용' }
+  ];
+  var FR_CAT_LABEL = { basic: '기본', tier: '등급 테두리', tag: '태그 테두리', rank: '순위 테두리', exclusive: '전용 테두리' };
+  var FR_CAT_ORDER = ['basic', 'tier', 'tag', 'rank', 'exclusive'];
+  var BG_CAT_LABEL = { basic: '기본', tier: '등급 배경', tag: '태그 배경', exclusive: '전용 배경' };
+  var BG_CAT_ORDER = ['basic', 'tier', 'tag', 'exclusive'];
+  var state = { mode: 'tag', status: 'loading', error: '', data: null, bg: { status: 'loading', error: '', data: null, busy: false, msg: '' }, fr: { status: 'loading', error: '', data: null, busy: false, msg: '' }, intro: { status: 'loading', error: '', data: null, busy: false, msg: '' }, kind: 'all', q: '', onlyLocked: false };
+
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function fmt(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+  function pill(tag, size) {
+    if (typeof KihoBadge !== 'undefined') { var p = KihoBadge.tagPill(tag, { size: size }); if (p) return p; }
+    var f = document.createElement('span'); f.textContent = tag ? '[' + tag.name + ']' : ''; return f;
+  }
+
+  function api(path, body) {
+    var ctrl = new AbortController(); var timer = setTimeout(function () { ctrl.abort(); }, 15000);
+    var headers = { 'Accept': 'application/json' };
+    if (typeof Kiho !== 'undefined' && Kiho.isMember() && Kiho.token()) headers['Authorization'] = 'Bearer ' + Kiho.token();
+    var init = { headers: headers, signal: ctrl.signal };
+    if (body !== undefined) { init.method = 'POST'; headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(body); }
+    return fetch(API_BASE.replace(/\/$/, '') + path, init).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        return { status: res.status, ok: res.ok && !!data && data.success === true, data: data };
+      });
+    }).then(function (r) { clearTimeout(timer); return r; }, function (e) { clearTimeout(timer); throw e; });
+  }
+  function errText(err) {
+    if (err && err.name === 'AbortError') return '서버 응답이 늦어지고 있어요. 잠시 후 다시 시도해 주세요.';
+    try { console.error('[kiho]', err); } catch (e) {}
+    var isNet = err instanceof TypeError && /fetch|network|load failed|failed to/i.test(String(err.message));
+    if (isNet) {
+      var host = location.hostname;
+      if (location.protocol === 'file:' || !/(^|\.)kiholabs\.com$/.test(host))
+        return '이 주소(' + (host || '파일') + ')에서는 서버가 접속을 막아요. kiholabs.com 으로 접속해 주세요.';
+      return '서버에 연결하지 못했어요. 네트워크 상태를 확인해 주세요.';
+    }
+    return '화면을 그리는 중 오류가 났어요: ' + (err && err.message ? err.message : err);
+  }
+  function apiMsg(r, fallback) {
+    if (r.data && r.data.error) return r.data.error;
+    if (r.status === 404) return '서버에서 API를 찾지 못했어요. Worker 배포 상태를 확인해 주세요.';
+    return fallback;
+  }
+
+  // /api/tags/me 응답(등급 12개 + 퀘스트 90개 카탈로그 전체)을 도감 항목으로 통일
+  function buildEntries(d) {
+    var out = d.tiers.map(function (t) {
+      return { tag: { id: t.id, kind: 'tier', name: t.name, style: t.style }, kind: 'tier', category: 'tier',
+        desc: '누적 ' + fmt(t.min) + ' 스테이지 클리어', owned: t.owned, authedShown: true };
+    });
+    out = out.concat(d.quests.map(function (q) {
+      return { tag: q.tag, kind: q.exclusive ? 'exclusive' : q.limited ? 'limited' : 'quest', category: q.category,
+        desc: q.desc + (d.authed && !q.claimed && !q.exclusive ? '  (' + fmt(q.current) + ' / ' + fmt(q.goal) + ')' : ''),
+        owned: q.claimed, locked_note: q.limited && !q.available && !q.claimed ? '시즌 종료로 더 이상 받을 수 없어요' : null };
+    }));
+    return out;
+  }
+
+  function buildTabs() {
+    var box = $('#kind-tabs'); box.textContent = '';
+    var bgMode = state.mode === 'bg', frMode = state.mode === 'frame' || state.mode === 'intro';
+    (frMode ? FR_KINDS : bgMode ? BG_KINDS : KINDS).forEach(function (k) {
+      var b = el('button', 'tab'); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(k.id === state.kind));
+      b.appendChild(document.createTextNode(k.name + ' '));
+      var n = state.mode === 'intro'
+        ? (state.intro.data ? state.intro.data.intros.filter(function (x) { return k.id === 'all' || x.category === k.id; }).length : 0)
+        : frMode
+        ? (state.fr.data ? state.fr.data.frames.filter(function (x) { return k.id === 'all' || x.category === k.id; }).length : 0)
+        : bgMode
+        ? (state.bg.data ? state.bg.data.backgrounds.filter(function (x) { return k.id === 'all' || x.category === k.id; }).length : 0)
+        : (state.data ? buildEntries(state.data).filter(function (e2) { return k.id === 'all' || e2.kind === k.id || e2.category === k.id; }).length : 0);
+      b.appendChild(el('b', '', String(n)));
+      b.addEventListener('click', function () { state.kind = k.id; renderList(); buildTabs(); });
+      box.appendChild(b);
+    });
+  }
+
+  var CAT_LABEL = {
+    tier: '등급', limited: '한정판', cleared: '완주', stages: '누적 스테이지', difficulty: '난이도별 정복',
+    perfect: '퍼펙트', combo: '콤보', played: '플레이 횟수', rank: '랭킹', speed: '스피드런', flavor: '플레이버', special: '종합 업적', exclusive: '전용 칭호'
+  };
+  var CAT_ORDER = ['tier', 'limited', 'cleared', 'stages', 'difficulty', 'perfect', 'combo', 'played', 'rank', 'speed', 'flavor', 'special', 'exclusive'];
+
+  function entryEl(e) {
+    var box = el('div', 'entry ' + (e.owned ? 'owned' : 'locked'));
+    box.appendChild(pill(e.tag, 'lg'));
+    var b = el('div', 'entry-b'); b.appendChild(el('b', '', e.tag.name));
+    b.appendChild(el('span', '', e.locked_note || e.desc)); box.appendChild(b);
+    box.appendChild(el('span', 'entry-state', e.owned ? '✓ 보유' : '🔒'));
+    return box;
+  }
+
+  function renderList() {
+    if (state.mode === 'bg') { renderBg(); return; }
+    if (state.mode === 'frame') { renderFr(); return; }
+    if (state.mode === 'intro') { renderIn(); return; }
+    var root = $('#root'); root.textContent = '';
+    if (state.status === 'loading') { root.appendChild(loadingBlock()); return; }
+    if (state.status === 'error') { root.appendChild(errorBlock()); return; }
+
+    var d = state.data;
+    var all = buildEntries(d);
+    var q = state.q.trim().toLowerCase();
+    var filtered = all.filter(function (e) {
+      if (state.kind !== 'all' && e.kind !== state.kind && e.category !== state.kind) return false;
+      if (state.onlyLocked && e.owned) return false;
+      if (q && e.tag.name.toLowerCase().indexOf(q) === -1 && !(e.desc || '').toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    $('#count-chip').textContent = (d.authed ? all.filter(function (e) { return e.owned; }).length + ' / ' : '') + all.length + '개';
+
+    if (!filtered.length) { root.appendChild((function () { var b = el('div', 'glass empty', '조건에 맞는 태그가 없어요.'); return b; })()); return; }
+
+    if (state.kind !== 'all' || q) {
+      var sec = el('section', 'glass');
+      var grid = el('div', 'grid'); filtered.forEach(function (e) { grid.appendChild(entryEl(e)); }); sec.appendChild(grid);
+      root.appendChild(sec);
+    } else {
+      CAT_ORDER.forEach(function (cat) {
+        var items = filtered.filter(function (e) { return (cat === 'tier' || cat === 'limited') ? e.kind === cat : e.category === cat; });
+        if (!items.length) return;
+        var sec = el('section', 'glass');
+        var h = el('div', 'cat-title'); h.appendChild(el('h2', '', CAT_LABEL[cat])); h.appendChild(el('span', '', items.length + '개')); sec.appendChild(h);
+        var grid = el('div', 'grid'); items.forEach(function (e) { grid.appendChild(entryEl(e)); }); sec.appendChild(grid);
+        root.appendChild(sec);
+      });
+    }
+
+    var note = el('div', 'note');
+    note.appendChild(document.createTextNode('시즌 랭킹 태그(예: “시즌 1 Hard 1등”)는 시즌이 끝날 때 난이도별 TOP 3에게 자동으로 지급돼서 여기 목록엔 미리 나오지 않아요. '));
+    var lk = el('a', '', '리더보드에서 순위 확인하기'); lk.href = 'leaderboard.html'; note.appendChild(lk);
+    root.appendChild(note);
+  }
+
+  /* ---------------- 테두리 도감 ---------------- */
+  function frEntryEl(f, equippedId) {
+    var isEq = f.owned && f.id === equippedId;
+    var box = el('div', 'bg-entry fr-entry ' + (f.owned ? 'owned' : 'locked') + (isEq ? ' equipped' : ''));
+    var prev = el('div', 'fr-prev');
+    if (typeof KihoProfile !== 'undefined') {
+      var me = typeof Kiho !== 'undefined' && Kiho.isMember() ? (Kiho.user() || {}).username : null;
+      prev.appendChild(KihoProfile.framed(KihoProfile.avatar(me || 'K', null, 0), 52, f.id === 'plain' ? null : f.id, 6));
+    }
+    box.appendChild(prev);
+    box.appendChild(el('b', 'fr-name', f.name));
+    var info = el('div', 'entry-b'); info.appendChild(el('span', '', f.desc)); box.appendChild(info);
+    var foot = el('div', 'bg-foot');
+    foot.appendChild(el('span', 'entry-state', f.owned ? (isEq ? '✓ 장착 중' : '✓ 보유') : '🔒 ' + f.unlock_label));
+    if (f.owned && !isEq && state.fr.data.authed) {
+      var btn = el('button', 'pill pill--sm pill--mint', '장착'); btn.type = 'button'; btn.disabled = state.fr.busy;
+      btn.addEventListener('click', function () { equipFr(f.id); });
+      foot.appendChild(btn);
+    }
+    box.appendChild(foot);
+    return box;
+  }
+
+  function equipFr(id) {
+    state.fr.busy = true; state.fr.msg = ''; renderFr();
+    api('/api/frames/equip', { frame_id: id }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '테두리를 바꾸지 못했어요.') };
+      state.fr.data.equipped = r.data.equipped;
+    }).catch(function (err) {
+      state.fr.msg = err && err.friendly ? err.message : errText(err);
+    }).then(function () { state.fr.busy = false; renderFr(); });
+  }
+
+  function renderFr() {
+    var root = $('#root'); root.textContent = '';
+    var fr = state.fr;
+    if (fr.status === 'loading') { root.appendChild(loadingBlock()); return; }
+    if (fr.status === 'error') { var eb = el('div', 'glass state state--error'); eb.appendChild(el('h3', '', '불러오지 못했어요')); eb.appendChild(el('p', '', fr.error));
+      var rb = el('button', 'pill pill--mint', '다시 시도'); rb.type = 'button'; rb.addEventListener('click', loadFr); eb.appendChild(rb); root.appendChild(eb); return; }
+
+    var d = fr.data, all = d.frames, q = state.q.trim().toLowerCase();
+    var filtered = all.filter(function (f) {
+      if (state.kind !== 'all' && f.category !== state.kind) return false;
+      if (state.onlyLocked && f.owned) return false;
+      if (q && f.name.toLowerCase().indexOf(q) === -1 && f.desc.toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    $('#count-chip').textContent = (d.authed ? all.filter(function (f) { return f.owned; }).length + ' / ' : '') + all.length + '개';
+    if (fr.msg) root.appendChild(el('div', 'note', fr.msg));
+    if (!filtered.length) { root.appendChild(el('div', 'glass empty', '조건에 맞는 테두리가 없어요.')); return; }
+
+    FR_CAT_ORDER.forEach(function (cat) {
+      var items = filtered.filter(function (f) { return f.category === cat; });
+      if (!items.length) return;
+      var sec = el('section', 'glass');
+      var h = el('div', 'cat-title'); h.appendChild(el('h2', '', FR_CAT_LABEL[cat])); h.appendChild(el('span', '', items.length + '개')); sec.appendChild(h);
+      var grid = el('div', 'bg-grid fr-grid'); items.forEach(function (f) { grid.appendChild(frEntryEl(f, d.equipped)); }); sec.appendChild(grid);
+      root.appendChild(sec);
+    });
+    var note = el('div', 'note');
+    note.appendChild(document.createTextNode('장착한 테두리는 리더보드와 프로필 사진에 보여요. '));
+    var lk = el('a', '', '내 프로필'); lk.href = 'profile.html'; note.appendChild(lk);
+    note.appendChild(document.createTextNode('에서도 바꿀 수 있어요.'));
+    root.appendChild(note);
+  }
+
+  function loadFr() {
+    state.fr.status = 'loading'; renderList();
+    api('/api/frames').then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '테두리 정보를 불러오지 못했어요.') };
+      state.fr.data = r.data; state.fr.status = 'ready';
+    }).catch(function (err) {
+      state.fr.status = 'error'; state.fr.error = err && err.friendly ? err.message : errText(err);
+    }).then(function () { buildTabs(); renderList(); });
+  }
+
+  /* ---------------- 입장 효과 도감 ---------------- */
+  var IN_ICON = { basic: '◌', tier: '✦', tag: '✿', rank: '★', exclusive: '☠' };
+  function previewIntro(id) {
+    if (typeof KihoProfile === 'undefined') return;
+    var ov = el('div'); ov.style.cssText = 'position:fixed;inset:0;z-index:2147482500;background:rgba(3,14,22,.82);display:grid;place-items:center;cursor:pointer';
+    var card = el('div', 'kp-card'); card.style.cssText = 'width:min(340px,86vw);height:300px;display:grid;place-items:center;text-align:center;animation:none';
+    card.appendChild(el('div', '', '프로필 카드 미리보기'));
+    ov.appendChild(card); document.body.appendChild(ov);
+    var done = function () { if (ov.parentNode) ov.parentNode.removeChild(ov); };
+    ov.addEventListener('click', done); setTimeout(done, 3600);
+    KihoProfile.playIntro(ov, card, id);
+  }
+  function inEntryEl(f, equippedId) {
+    var isEq = f.owned && f.id === equippedId;
+    var box = el('div', 'bg-entry fr-entry ' + (f.owned ? 'owned' : 'locked') + (isEq ? ' equipped' : ''));
+    box.appendChild(el('div', 'fr-prev', IN_ICON[f.category] || '✦'));
+    box.appendChild(el('b', 'fr-name', f.name));
+    var info = el('div', 'entry-b'); info.appendChild(el('span', '', f.desc)); box.appendChild(info);
+    var foot = el('div', 'bg-foot');
+    foot.appendChild(el('span', 'entry-state', f.owned ? (isEq ? '✓ 장착 중' : '✓ 보유') : '🔒 ' + f.unlock_label));
+    var pv = el('button', 'pill pill--sm', '▶'); pv.type = 'button'; pv.title = '미리보기'; pv.setAttribute('aria-label', f.name + ' 미리보기');
+    pv.addEventListener('click', function () { previewIntro(f.id); }); foot.appendChild(pv);
+    if (f.owned && !isEq && state.intro.data.authed) {
+      var btn = el('button', 'pill pill--sm pill--mint', '장착'); btn.type = 'button'; btn.disabled = state.intro.busy;
+      btn.addEventListener('click', function () { equipIn(f.id); }); foot.appendChild(btn);
+    }
+    box.appendChild(foot);
+    return box;
+  }
+  function equipIn(id) {
+    state.intro.busy = true; state.intro.msg = ''; renderIn();
+    api('/api/intros/equip', { intro_id: id }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '입장 효과를 바꾸지 못했어요.') };
+      state.intro.data.equipped = r.data.equipped;
+    }).catch(function (err) {
+      state.intro.msg = err && err.friendly ? err.message : errText(err);
+    }).then(function () { state.intro.busy = false; renderIn(); });
+  }
+  function renderIn() {
+    var root = $('#root'); root.textContent = '';
+    var it = state.intro;
+    if (it.status === 'loading') { root.appendChild(loadingBlock()); return; }
+    if (it.status === 'error') { var eb = el('div', 'glass state state--error'); eb.appendChild(el('h3', '', '불러오지 못했어요')); eb.appendChild(el('p', '', it.error));
+      var rb = el('button', 'pill pill--mint', '다시 시도'); rb.type = 'button'; rb.addEventListener('click', loadIn); eb.appendChild(rb); root.appendChild(eb); return; }
+    var d = it.data, all = d.intros, q = state.q.trim().toLowerCase();
+    var filtered = all.filter(function (f) {
+      if (state.kind !== 'all' && f.category !== state.kind) return false;
+      if (state.onlyLocked && f.owned) return false;
+      if (q && f.name.toLowerCase().indexOf(q) === -1 && f.desc.toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    $('#count-chip').textContent = (d.authed ? all.filter(function (f) { return f.owned; }).length + ' / ' : '') + all.length + '개';
+    if (it.msg) root.appendChild(el('div', 'note', it.msg));
+    if (!filtered.length) { root.appendChild(el('div', 'glass empty', '조건에 맞는 입장 효과가 없어요.')); return; }
+    FR_CAT_ORDER.forEach(function (cat) {
+      var items = filtered.filter(function (f) { return f.category === cat; });
+      if (!items.length) return;
+      var sec = el('section', 'glass');
+      var h = el('div', 'cat-title'); h.appendChild(el('h2', '', FR_CAT_LABEL[cat].replace('테두리', '입장'))); h.appendChild(el('span', '', items.length + '개')); sec.appendChild(h);
+      var grid = el('div', 'bg-grid fr-grid'); items.forEach(function (f) { grid.appendChild(inEntryEl(f, d.equipped)); }); sec.appendChild(grid);
+      root.appendChild(sec);
+    });
+    var note = el('div', 'note');
+    note.appendChild(document.createTextNode('장착한 입장 효과는 다른 사람이 내 프로필을 열 때 나와요. ▶ 로 미리 볼 수 있어요. '));
+    var lk = el('a', '', '내 프로필'); lk.href = 'profile.html'; note.appendChild(lk);
+    note.appendChild(document.createTextNode('에서도 바꿀 수 있어요.'));
+    root.appendChild(note);
+  }
+  function loadIn() {
+    state.intro.status = 'loading'; renderList();
+    api('/api/intros').then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '입장 효과 정보를 불러오지 못했어요.') };
+      state.intro.data = r.data; state.intro.status = 'ready';
+    }).catch(function (err) {
+      state.intro.status = 'error'; state.intro.error = err && err.friendly ? err.message : errText(err);
+    }).then(function () { buildTabs(); renderList(); });
+  }
+
+  /* ---------------- 배경 도감 ---------------- */
+  function bgEntryEl(b, equippedId) {
+    var isEq = b.owned && b.id === equippedId;
+    var box = el('div', 'bg-entry ' + (b.owned ? 'owned' : 'locked') + (isEq ? ' equipped' : ''));
+    var prev = el('div', 'bg-prev');
+    if (typeof KihoProfile !== 'undefined') {
+      prev.appendChild(KihoProfile.bgTile(b.id));
+      var me = typeof Kiho !== 'undefined' && Kiho.isMember() ? (Kiho.user() || {}).username : null;
+      prev.appendChild(KihoProfile.avatar(me || 'K', null));
+    }
+    prev.appendChild(el('b', '', b.name));
+    box.appendChild(prev);
+    var info = el('div', 'entry-b'); info.appendChild(el('span', '', b.desc)); box.appendChild(info);
+    var foot = el('div', 'bg-foot');
+    foot.appendChild(el('span', 'entry-state', b.owned ? (isEq ? '✓ 장착 중' : '✓ 보유') : '🔒 ' + b.unlock_label));
+    if (b.owned && !isEq && state.bg.data.authed) {
+      var btn = el('button', 'pill pill--sm pill--mint', '장착'); btn.type = 'button'; btn.disabled = state.bg.busy;
+      btn.addEventListener('click', function () { equipBg(b.id); });
+      foot.appendChild(btn);
+    }
+    box.appendChild(foot);
+    return box;
+  }
+
+  function equipBg(id) {
+    state.bg.busy = true; state.bg.msg = ''; renderBg();
+    api('/api/backgrounds/equip', { bg_id: id }).then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '배경을 바꾸지 못했어요.') };
+      state.bg.data.equipped = r.data.equipped;
+    }).catch(function (err) {
+      state.bg.msg = err && err.friendly ? err.message : errText(err);
+    }).then(function () { state.bg.busy = false; renderBg(); });
+  }
+
+  function renderBg() {
+    var root = $('#root'); root.textContent = '';
+    var bg = state.bg;
+    if (bg.status === 'loading') { root.appendChild(loadingBlock()); return; }
+    if (bg.status === 'error') { var eb = el('div', 'glass state state--error'); eb.appendChild(el('h3', '', '불러오지 못했어요')); eb.appendChild(el('p', '', bg.error));
+      var rb = el('button', 'pill pill--mint', '다시 시도'); rb.type = 'button'; rb.addEventListener('click', loadBg); eb.appendChild(rb); root.appendChild(eb); return; }
+
+    var d = bg.data, all = d.backgrounds, q = state.q.trim().toLowerCase();
+    var filtered = all.filter(function (b) {
+      if (state.kind !== 'all' && b.category !== state.kind) return false;
+      if (state.onlyLocked && b.owned) return false;
+      if (q && b.name.toLowerCase().indexOf(q) === -1 && b.desc.toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    $('#count-chip').textContent = (d.authed ? all.filter(function (b) { return b.owned; }).length + ' / ' : '') + all.length + '개';
+
+    if (bg.msg) root.appendChild(el('div', 'note', bg.msg));
+    if (!filtered.length) { root.appendChild(el('div', 'glass empty', '조건에 맞는 배경이 없어요.')); return; }
+
+    BG_CAT_ORDER.forEach(function (cat) {
+      var items = filtered.filter(function (b) { return b.category === cat; });
+      if (!items.length) return;
+      var sec = el('section', 'glass');
+      var h = el('div', 'cat-title'); h.appendChild(el('h2', '', BG_CAT_LABEL[cat])); h.appendChild(el('span', '', items.length + '개')); sec.appendChild(h);
+      var grid = el('div', 'bg-grid'); items.forEach(function (b) { grid.appendChild(bgEntryEl(b, d.equipped)); }); sec.appendChild(grid);
+      root.appendChild(sec);
+    });
+
+    var note = el('div', 'note');
+    note.appendChild(document.createTextNode('장착한 배경은 리더보드 내 줄과 프로필에 보여요. 사진·한마디와 함께 '));
+    var lk = el('a', '', '내 프로필'); lk.href = 'profile.html'; note.appendChild(lk);
+    note.appendChild(document.createTextNode('에서도 바꿀 수 있어요.'));
+    root.appendChild(note);
+  }
+
+  function loadBg() {
+    state.bg.status = 'loading'; renderList();
+    api('/api/backgrounds').then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '배경 정보를 불러오지 못했어요.') };
+      state.bg.data = r.data; state.bg.status = 'ready';
+    }).catch(function (err) {
+      state.bg.status = 'error'; state.bg.error = err && err.friendly ? err.message : errText(err);
+    }).then(function () { buildTabs(); renderList(); });
+  }
+
+  function buildModeTabs() {
+    var box = $('#mode-tabs'); box.textContent = '';
+    [{ id: 'tag', name: '태그 도감' }, { id: 'bg', name: '배경 도감' }, { id: 'frame', name: '테두리 도감' }, { id: 'intro', name: '입장 효과 도감' }].forEach(function (m) {
+      var b = el('button', 'tab', m.name); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(m.id === state.mode));
+      b.addEventListener('click', function () { setMode(m.id); });
+      box.appendChild(b);
+    });
+  }
+
+  function setMode(m, silent) {
+    state.mode = m; state.kind = 'all';
+    $('#page-title').textContent = m === 'bg' ? '배경 도감' : m === 'frame' ? '테두리 도감' : m === 'intro' ? '입장 효과 도감' : '태그 도감';
+    $('#page-lead').textContent = '';
+    if (m === 'intro') {
+      $('#page-lead').appendChild(document.createTextNode('내 프로필을 열었을 때 나오는 멋진 연출이에요. 등급·태그·순위를 달성하면 열려요. 태그는 '));
+      var ai = el('a', '', '태그 도감'); ai.href = '?type=tag'; ai.addEventListener('click', function (e) { e.preventDefault(); setMode('tag'); }); $('#page-lead').appendChild(ai);
+      $('#page-lead').appendChild(document.createTextNode('에서 볼 수 있어요.'));
+      $('#q').placeholder = '입장 효과 이름으로 검색…';
+    } else if (m === 'frame') {
+      $('#page-lead').appendChild(document.createTextNode('프로필 사진을 감싸는 테두리예요. 등급을 올리거나 태그를 모으고 순위에 오르면 열려요. 태그는 '));
+      var af = el('a', '', '태그 도감'); af.href = '?type=tag'; af.addEventListener('click', function (e) { e.preventDefault(); setMode('tag'); }); $('#page-lead').appendChild(af);
+      $('#page-lead').appendChild(document.createTextNode('에서 볼 수 있어요.'));
+      $('#q').placeholder = '테두리 이름으로 검색…';
+    } else if (m === 'bg') {
+      $('#page-lead').appendChild(document.createTextNode('랭킹 줄과 프로필을 꾸미는 배경이에요. 등급을 올리거나 태그를 모으면 열려요. 태그는 '));
+      var a = el('a', '', '태그 도감'); a.href = '?type=tag'; a.addEventListener('click', function (e) { e.preventDefault(); setMode('tag'); }); $('#page-lead').appendChild(a);
+      $('#page-lead').appendChild(document.createTextNode('에서 볼 수 있어요.'));
+      $('#q').placeholder = '배경 이름으로 검색…';
+    } else {
+      $('#page-lead').appendChild(document.createTextNode('모든 태그를 한눈에 둘러보세요. 획득은 '));
+      var l1 = el('a', '', '메인 화면 퀘스트'); l1.href = 'games.html#quests'; $('#page-lead').appendChild(l1);
+      $('#page-lead').appendChild(document.createTextNode('에서, 장착은 '));
+      var l2 = el('a', '', '내 태그'); l2.href = 'tags.html'; $('#page-lead').appendChild(l2);
+      $('#page-lead').appendChild(document.createTextNode('에서 할 수 있어요.'));
+      $('#q').placeholder = '태그 이름으로 검색…';
+    }
+    if (!silent) { try { history.replaceState(null, '', '?type=' + m); } catch (e) {} }
+    buildModeTabs(); buildTabs();
+    if (m === 'intro') { if (!state.intro.data) loadIn(); else renderList(); }
+    else if (m === 'frame') { if (!state.fr.data) loadFr(); else renderList(); }
+    else if (m === 'bg') { if (!state.bg.data) loadBg(); else renderList(); }
+    else { if (!state.data) load(); else renderList(); }
+  }
+
+  function loadingBlock() { var b = el('div', 'glass state'); b.appendChild(el('h3', '', '불러오는 중…')); return b; }
+  function errorBlock() {
+    var b = el('div', 'glass state state--error'); b.appendChild(el('h3', '', '불러오지 못했어요')); b.appendChild(el('p', '', state.error));
+    var r = el('button', 'pill pill--mint', '다시 시도'); r.type = 'button'; r.addEventListener('click', load); b.appendChild(r); return b;
+  }
+
+  function load() {
+    state.status = 'loading'; renderList();
+    api('/api/tags/me').then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '도감 정보를 불러오지 못했어요.') };
+      state.data = r.data; state.status = 'ready';
+    }).catch(function (err) {
+      state.status = 'error'; state.error = err && err.friendly ? err.message : errText(err);
+    }).then(function () { buildTabs(); renderList(); });
+  }
+
+  $('#nav-account').textContent = typeof Kiho !== 'undefined' && Kiho.isMember() ? '내 계정' : '로그인';
+    if (typeof Kiho !== 'undefined' && Kiho.isMember()) $('#nav-account').href = 'profile.html';
+  $('#q').addEventListener('input', function (e) { state.q = e.target.value; renderList(); });
+  $('#only-locked').addEventListener('change', function (e) { state.onlyLocked = e.target.checked; renderList(); });
+  var initType = new URLSearchParams(location.search).get('type'); var initMode = initType === 'bg' ? 'bg' : initType === 'frame' ? 'frame' : initType === 'intro' ? 'intro' : 'tag';
+  setMode(initMode, true);
+})();
+</script>
+</body>
+</html>

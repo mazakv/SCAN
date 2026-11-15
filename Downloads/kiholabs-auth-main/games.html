@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A2A3C">
+<title>게임 선택 - Kiho Labs</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+<style>
+  :root {
+    --bg: #0A2A3C; --ink: #F2F8FB; --ink-soft: #B9CDD8; --ink-faint: #8FAAB8;
+    --mint: #6FF2E0; --mint-ink: #062230; --danger: #FFA3B0; --ok: #9BF7CC;
+    --edge: rgba(255,255,255,.18); --field-bg: rgba(255,255,255,.07);
+    --r-card: 28px; --r-ctrl: 14px; --ease: cubic-bezier(.3,.8,.2,1);
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; min-height: 100dvh;
+    background: linear-gradient(160deg, #0C3549 0%, #0A2A3C 48%, #071F2E 100%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+
+  .page { position: relative; min-height: 100dvh; padding: 28px 16px 56px; overflow: clip; }
+  .wrap { position: relative; z-index: 1; width: min(920px, 100%); margin: 0 auto; }
+
+  .orbs { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .orb { position: absolute; border-radius: 50%; }
+  .orb--mint { width: 520px; height: 520px; left: -240px; top: -120px;
+    background: radial-gradient(circle, rgba(34,211,197,.7), rgba(34,211,197,0) 68%); }
+  .orb--cobalt { width: 620px; height: 620px; right: -300px; bottom: -260px;
+    background: radial-gradient(circle, rgba(99,112,255,.8), rgba(99,112,255,0) 68%); }
+  .orb--coral { width: 300px; height: 300px; left: 12%; bottom: -150px;
+    background: radial-gradient(circle, rgba(255,122,144,.7), rgba(255,122,144,0) 68%); }
+
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+  .brand svg { width: 30px; height: 30px; }
+
+  .who { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-soft); }
+  .badge { padding: 5px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+    background: rgba(111,242,224,.16); color: var(--mint); box-shadow: inset 0 0 0 1px rgba(111,242,224,.4); }
+  .badge--guest { background: rgba(255,255,255,.1); color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--edge); }
+
+  h1 { margin: 0 0 6px; font-size: 30px; font-weight: 700; letter-spacing: -.025em; }
+  .lead { margin: 0 0 22px; color: var(--ink-soft); font-size: 15px; }
+
+  .notice {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 14px 16px; margin-bottom: 24px;
+    border: 1px solid rgba(255,163,176,.38); border-radius: var(--r-ctrl);
+    background: rgba(255,122,144,.12); color: #FFC7CF; font-size: 14px;
+  }
+  .notice a { color: var(--mint); font-weight: 600; }
+
+  .resume { display: none; align-items: center; gap: 14px; margin: 0 0 18px; padding: 14px 18px; border-radius: var(--r-ctrl); text-decoration: none; color: inherit;
+    background: linear-gradient(120deg, rgba(111,242,224,.22), rgba(124,139,255,.18)); box-shadow: inset 0 0 0 1px rgba(111,242,224,.4); transition: transform .2s var(--ease); }
+  .resume.on { display: flex; }
+  .resume:hover { transform: translateY(-2px); }
+  .resume b { font-size: 16px; }
+  .resume small { margin-left: auto; color: var(--ink-faint); font-size: 12px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+  .card {
+    position: relative; display: flex; flex-direction: column; gap: 10px;
+    padding: 22px; border-radius: var(--r-card); text-align: left; text-decoration: none;
+    color: inherit; font: inherit; border: 0; cursor: pointer;
+    background: linear-gradient(160deg, rgba(255,255,255,.15), rgba(255,255,255,.05));
+    -webkit-backdrop-filter: blur(26px) saturate(150%); backdrop-filter: blur(26px) saturate(150%);
+    box-shadow: 0 30px 60px -20px rgba(2,12,20,.55), inset 0 1px 0 rgba(255,255,255,.25);
+    transition: transform .2s var(--ease), box-shadow .2s;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 34px 64px -20px rgba(2,12,20,.65), inset 0 1px 0 rgba(255,255,255,.3); }
+  .card[aria-disabled="true"] { opacity: .55; cursor: not-allowed; transform: none; }
+  .ico { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px;
+    background: rgba(111,242,224,.15); color: var(--mint); font-size: 22px; }
+  .card h2 { margin: 4px 0 0; font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
+  .card p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .tag { padding: 3px 9px; border-radius: 999px; font-size: 12px; color: var(--ink-faint);
+    background: var(--field-bg); box-shadow: inset 0 0 0 1px var(--edge); }
+  .soon { position: absolute; top: 18px; right: 18px; font-size: 12px; color: var(--ink-faint); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 44px; padding: 0 18px; border: 0; border-radius: var(--r-ctrl);
+    background: rgba(255,255,255,.1); color: var(--ink); box-shadow: inset 0 0 0 1px var(--edge);
+    font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+  .btn--mint { background: var(--mint); color: var(--mint-ink); box-shadow: none; }
+  .btn:hover { filter: brightness(1.08); }
+  a.btn { text-decoration: none; }
+
+  @media (max-width: 560px) { h1 { font-size: 25px; } .top { flex-wrap: wrap; } }
+
+  /* ===== 메인 화면: 바로가기 · 등급표 · 퀘스트 ===== */
+  .jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+  .jump a { position: relative; display: inline-flex; align-items: center; height: 38px; padding: 0 16px; border-radius: 999px; text-decoration: none;
+    background: rgba(255,255,255,.1); color: var(--ink); box-shadow: inset 0 0 0 1px var(--edge); font-size: 14px; font-weight: 600; transition: filter .2s; }
+  .jump a:hover { filter: brightness(1.12); }
+  .jdot { display: inline-block; width: 8px; height: 8px; margin-left: 8px; border-radius: 50%; background: #FF7A90; box-shadow: 0 0 10px #FF7A90; }
+
+  .pn { margin-top: 28px; padding: 22px 18px; border-radius: var(--r-card); scroll-margin-top: 16px;
+    background: linear-gradient(160deg, rgba(255,255,255,.15), rgba(255,255,255,.05));
+    -webkit-backdrop-filter: blur(26px) saturate(150%); backdrop-filter: blur(26px) saturate(150%);
+    box-shadow: 0 30px 60px -20px rgba(2,12,20,.55), inset 0 1px 0 rgba(255,255,255,.25); }
+  .pn-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 4px 14px; }
+  .pn-h h2 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .pn-h span { font-size: 13px; color: var(--ink-faint); }
+  .pn-h .season-chip { padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; color: #3a2200;
+    background: linear-gradient(135deg,#fff3b8,#ffc93c 55%,#ff9d1e); box-shadow: 0 0 14px rgba(255,190,60,.45); }
+  .sub-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 20px 4px 10px; }
+  .sub-h:first-child { margin-top: 0; }
+  .sub-h h3 { margin: 0; font-size: 16px; font-weight: 800; } .sub-h span { font-size: 12.5px; color: var(--ink-faint); }
+  .cat-h { align-items: center; gap: 12px; padding: 10px 12px; margin: 10px 0; border-radius: 14px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+  .cat-h-l { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
+  .cat-h-l h3 { margin: 0; font-size: 14.5px; font-weight: 800; } .cat-h-l span { font-size: 12px; color: var(--ink-faint); }
+  .cat-count { flex: none; font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .cat-toggle { flex: none; height: 30px; padding: 0 12px; border: 0; border-radius: 999px; background: rgba(255,255,255,.1); color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--edge); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .cat-toggle:hover { background: rgba(255,255,255,.16); }
+
+  .ms { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 18px; padding: 16px 18px; margin-bottom: 14px; border-radius: 20px;
+    background: linear-gradient(160deg, rgba(111,242,224,.16), rgba(111,242,224,.05)); box-shadow: inset 0 0 0 1px rgba(111,242,224,.38); }
+  .ms .kt { font-size: 20px; }
+  .ms-t b { font-size: 19px; font-weight: 800; letter-spacing: -.02em; } .ms-t span { display: block; font-size: 13.5px; color: var(--ink-soft); }
+  .ms-go { margin-left: auto; }
+  .ms-equipped { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .ms-equipped-l { font-size: 13px; color: var(--ink-faint); }
+  .ms-bar { flex: 1 1 100%; }
+  .bar { height: 10px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg,#6FF2E0,#7C8BFF); transition: width .6s var(--ease); }
+  .bar-cap { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
+
+  .tt { display: grid; gap: 8px; }
+  .tt-head, .tt-row { display: grid; grid-template-columns: 76px minmax(0,1.2fr) minmax(0,1fr) 128px; align-items: center; gap: 10px; }
+  .tt-head { padding: 0 16px 2px; font-size: 12px; font-weight: 600; color: var(--ink-faint); }
+  .tt-head span:last-child, .tt-state { text-align: right; }
+  .tt-row { min-height: 56px; padding: 8px 16px; border-radius: 16px; background: var(--field-bg); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+  .tt-row.is-current { background: rgba(111,242,224,.13); box-shadow: inset 0 0 0 1.5px rgba(111,242,224,.65); }
+  .tt-row.locked .kt { filter: grayscale(.85) brightness(.7); animation: none; opacity: .75; } .tt-row.locked .kt::after { display: none; }
+  .tt-lv { font-weight: 800; color: var(--ink-soft); } .tt-need { font-size: 14px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .tt-state { font-size: 13.5px; color: var(--ink-faint); } .tt-row.owned .tt-state { color: var(--ok); } .tt-row.is-current .tt-state { color: var(--mint); font-weight: 800; }
+
+  .qlist { display: grid; gap: 10px; }
+  .qq { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px 16px; align-items: center; padding: 14px 16px; border-radius: 18px;
+    background: var(--field-bg); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+  .qq.done { box-shadow: inset 0 0 0 1.5px rgba(155,247,204,.55); background: rgba(155,247,204,.08); }
+  .qq.limited { background: linear-gradient(135deg, rgba(255,95,210,.12), rgba(95,240,255,.08)); box-shadow: inset 0 0 0 1px rgba(255,140,230,.4); }
+  .qq.gone { opacity: .5; }
+  .qq-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .qq-h b { font-size: 15.5px; }
+  .ltd { padding: 1px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: .08em; color: #3a0a30; background: linear-gradient(110deg,#ff9ee6,#ffe38a,#9bf7ff); }
+  .qq-d { grid-column: 1; font-size: 13.5px; color: var(--ink-soft); }
+  .qq .bar { grid-column: 1; height: 8px; margin-top: 6px; } .qq-p { grid-column: 1; font-size: 12.5px; color: var(--ink-faint); }
+  .qq-act { grid-column: 2; grid-row: 1 / span 4; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .qq-tag { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-faint); } .qq-tag .kt { font-size: 14px; }
+  .lock { font-size: 13px; color: var(--ink-faint); white-space: nowrap; } .lock a { color: var(--mint); font-weight: 700; }
+  .sm { height: 32px; padding: 0 12px; font-size: 13px; }
+  .places { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+  .place-chip { padding: 6px 12px; border-radius: 999px; font-size: 13px; background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px var(--edge); } .place-chip b { color: var(--mint); }
+  .note { margin: 0 0 8px; font-size: 13.5px; color: var(--ink-soft); } .note a { color: var(--mint); font-weight: 700; }
+  .pn-state { text-align: center; padding: 26px 12px; color: var(--ink-soft); } .pn-state h3 { margin: 0 0 6px; color: var(--ink); } .pn-state--error h3 { color: var(--danger); } .pn-state p { margin: 0 0 14px; font-size: 14px; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom,0px)); z-index: 20; transform: translateX(-50%); max-width: min(92vw,440px);
+    padding: 12px 18px; border-radius: 14px; font-size: 14px; font-weight: 600; color: #062230; background: var(--mint); box-shadow: 0 14px 40px -10px rgba(0,0,0,.6); }
+  .toast--error { color: #fff; background: #c94a63; }
+
+  @media (max-width: 560px) {
+    .tt-head { display: none; }
+    .tt-row { grid-template-columns: 56px minmax(0,1fr) auto; grid-template-areas: "lv tag state" "lv need need"; row-gap: 2px; }
+    .tt-lv { grid-area: lv; } .tt-tag { grid-area: tag; } .tt-need { grid-area: need; font-size: 12.5px; } .tt-state { grid-area: state; }
+    .qq { grid-template-columns: 1fr; } .qq-act { grid-column: 1; grid-row: auto; flex-direction: row; align-items: center; justify-content: space-between; }
+    .ms-go { margin-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+
+  /* ===== 등급표/퀘스트 아코디언 ===== */
+  h2.pn-h { margin: 0 0 0; font: inherit; }
+  .pn-toggle {
+    width: 100%; display: flex; align-items: center; gap: 14px;
+    border: 0; background: none; color: inherit; font: inherit; cursor: pointer;
+    text-align: left; padding: 0; margin: 0 4px; border-radius: 12px;
+  }
+  .pn-toggle:hover { color: var(--mint); }
+  .pn-toggle:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+  .pn-h-l { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; color: var(--ink); }
+  .pn-side { flex: none; display: flex; align-items: center; gap: 14px; }
+  .pn-h-title { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .pn-h-note { font-size: 13px; color: var(--ink-faint); }
+  .chev { flex: none; width: 22px; height: 22px; color: var(--ink-soft); transition: transform .3s var(--ease); }
+  .chev path { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .pn-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .pn-toggle:hover .chev { color: var(--mint); }
+
+  /* grid-template-rows: 0fr↔1fr 트릭으로 높이를 몰라도 부드럽게 접고 펼칩니다 */
+  .pn-collapse { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .38s var(--ease); }
+  .pn-collapse.is-open { grid-template-rows: 1fr; }
+  .pn-inner { overflow: hidden; min-height: 0; }
+  .pn-collapse .pn-inner > * { padding-top: 16px; }
+  @media (prefers-reduced-motion: reduce) { .pn-collapse, .chev { transition: none; } }
+
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="orbs" aria-hidden="true">
+    <i class="orb orb--mint"></i><i class="orb orb--cobalt"></i><i class="orb orb--coral"></i>
+  </div>
+
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="12" cy="16" r="10" fill="#6FF2E0" fill-opacity=".85"/>
+          <circle cx="20" cy="16" r="10" fill="#7C8BFF" fill-opacity=".75"/>
+        </svg>
+        <span>Kiho Labs</span>
+      </div>
+      <div class="who">
+        <span id="who-name"></span>
+        <span class="badge" id="who-badge"></span>
+        <a class="btn" href="leaderboard.html">리더보드</a>
+        <a class="btn" href="tags.html">내 태그</a>
+        <a class="btn" href="codex.html">도감</a>
+        <a class="btn" href="profile.html" id="btn-profile" hidden>내 프로필</a>
+        <button class="btn" type="button" id="btn-session"></button>
+      </div>
+    </header>
+
+    <h1>오늘은 어떤 두뇌를 깨워볼까요?</h1>
+    <p class="lead">스테이지 5개를 연속으로 클리어하면 한 판이 끝나고, 총점이 리더보드에 올라갑니다.</p>
+
+    <div class="notice" id="guest-notice" hidden>
+      <span aria-hidden="true">⚠️</span>
+      <span>지금은 <strong>게스트 모드</strong>입니다. 게임은 모두 즐길 수 있지만 리더보드에 점수를 올리려면
+        <a href="login.html">로그인</a>이 필요해요.</span>
+    </div>
+
+    <nav class="jump" aria-label="메인 바로가기">
+      <a href="#tiers">등급표</a>
+      <a href="#quests">퀘스트<i class="jdot" id="dot-quests" hidden></i></a>
+      <a href="tags.html">내 태그</a>
+      <a href="codex.html">도감</a>
+    </nav>
+
+    <a class="resume" id="resume" href="#"><span aria-hidden="true">▶</span><span><b id="resume-name"></b> <span id="resume-diff"></span></span><small>Ctrl+K 로 어디든 빠르게 이동</small></a>
+
+    <div class="grid">
+      <a class="card" href="number-forge.html">
+        <span class="ico" aria-hidden="true">±</span>
+        <h2>넘버 포지</h2>
+        <p>숫자 카드를 합성해 목표값을 만드세요. 짧고 빠른 연산 두뇌 훈련.</p>
+        <div class="tags"><span class="tag">연산 전략</span><span class="tag">역산 사고</span><span class="tag">난이도 4단계</span></div>
+      </a>
+
+      <a class="card" href="pixel-detective.html">
+        <span class="ico" aria-hidden="true">▦</span>
+        <h2>픽셀 탐정</h2>
+        <p>행·열 힌트만으로 숨겨진 그림을 논리적으로 복원하는 노노그램.</p>
+        <div class="tags"><span class="tag">연역 추론</span><span class="tag">제약 만족</span><span class="tag">난이도 4단계</span></div>
+      </a>
+
+      <a class="card" href="mirror-beam.html">
+        <span class="ico" aria-hidden="true">✦</span>
+        <h2>미러 빔 랩</h2>
+        <p>거울을 놓아 광선을 목표까지 보내는 공간 퍼즐.</p>
+        <div class="tags"><span class="tag">공간지각</span><span class="tag">경로 설계</span><span class="tag">난이도 4단계</span></div>
+      </a>
+
+      <a class="card" href="code-breaker.html">
+        <span class="ico" aria-hidden="true">◈</span>
+        <h2>코드 브레이커</h2>
+        <p>스트라이크·볼 힌트로 숨은 숫자 코드를 추리하는 게임.</p>
+        <div class="tags"><span class="tag">연역 추론</span><span class="tag">가설 검증</span><span class="tag">난이도 4단계</span></div>
+      </a>
+
+      <a class="card" href="memory-grid.html">
+        <span class="ico" aria-hidden="true">▣</span>
+        <h2>메모리 그리드</h2>
+        <p>깜빡이는 순서를 기억해 그대로 다시 눌러 보세요.</p>
+        <div class="tags"><span class="tag">작업 기억</span><span class="tag">집중력</span><span class="tag">난이도 4단계</span></div>
+      </a>
+
+      <a class="card" href="light-switch.html">
+        <span class="ico" aria-hidden="true">☀</span>
+        <h2>라이트 스위치</h2>
+        <p>누르면 주변까지 함께 바뀌는 불을 전부 끄는 퍼즐.</p>
+        <div class="tags"><span class="tag">패턴 추론</span><span class="tag">계획 세우기</span><span class="tag">난이도 4단계</span></div>
+      </a>
+
+      <a class="card" href="color-flood.html">
+        <span class="ico" aria-hidden="true">🎨</span>
+        <h2>컬러 플러드</h2>
+        <p>왼쪽 위에서 색을 번져 나가게 해 판 전체를 한 색으로 통일하세요.</p>
+        <div class="tags"><span class="tag">전략 계획</span><span class="tag">공간 지각</span><span class="tag">난이도 4단계</span></div>
+      </a>
+    </div>
+
+    <section class="pn" id="tiers" aria-labelledby="tiers-h">
+      <h2 class="pn-h">
+        <button class="pn-toggle" id="toggle-tiers" type="button" aria-expanded="false" aria-controls="tier-collapse">
+          <span class="pn-h-l"><span class="pn-h-title" id="tiers-h">등급표</span><span class="pn-h-note">누적 클리어 스테이지 수로 12단계까지 올라가요</span></span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </h2>
+      <div class="pn-collapse" id="tier-collapse"><div class="pn-inner"><div id="tier-root"></div></div></div>
+    </section>
+
+    <section class="pn" id="quests" aria-labelledby="quests-h">
+      <h2 class="pn-h">
+        <button class="pn-toggle" id="toggle-quests" type="button" aria-expanded="false" aria-controls="quest-collapse">
+          <span class="pn-h-l"><span class="pn-h-title" id="quests-h">퀘스트</span><span class="pn-h-note">완료하면 태그를 받아요</span></span>
+          <span class="pn-side">
+            <span class="season-chip" id="season-chip" hidden></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </span>
+        </button>
+      </h2>
+      <div class="pn-collapse" id="quest-collapse"><div class="pn-inner"><div id="quest-root"></div></div></div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="kiho-sdk.js"></script>
+<script src="kiho-badge.js"></script>
+<script src="kiho-nav.js" defer></script>
+<script>
+(function () {
+  'use strict';
+  if (!Kiho.requireGameAccess()) return;
+
+  var nameEl = document.getElementById('who-name');
+  var badgeEl = document.getElementById('who-badge');
+  var btn = document.getElementById('btn-session');
+  var notice = document.getElementById('guest-notice');
+
+  if (Kiho.isMember()) {
+    var me = Kiho.user() || {};
+    if (typeof KihoBadge !== 'undefined') KihoBadge.render(nameEl, me.username || Kiho.displayName(), { suffix: '님' });
+    else nameEl.textContent = Kiho.displayName() + '님';
+    badgeEl.textContent = '회원';
+    badgeEl.className = 'badge';
+    document.getElementById('btn-profile').hidden = false;
+    nameEl.style.cursor = 'pointer'; nameEl.title = '내 프로필';
+    nameEl.addEventListener('click', function () { location.assign('profile.html'); });
+    btn.textContent = '로그아웃';
+    btn.addEventListener('click', function () { Kiho.logout(); location.assign('login.html'); });
+  } else {
+    nameEl.textContent = '';
+    badgeEl.textContent = '게스트';
+    badgeEl.className = 'badge badge--guest';
+    btn.textContent = '로그인';
+    btn.classList.add('btn--mint');
+    btn.addEventListener('click', function () { location.assign('login.html'); });
+    notice.hidden = false;
+  }
+
+  /* ==============================================================
+     등급표 · 퀘스트  (서버 GET /api/tags/me — 로그인하지 않아도 목록은 볼 수 있어요)
+  ============================================================== */
+  var API_BASE = String((Kiho.CONFIG && Kiho.CONFIG.API_BASE) || 'https://api.kiholabs.com').replace(/\/$/, '');
+  var DIFF_NAME = { easy: 'Easy', normal: 'Normal', hard: 'Hard', extreme: 'Extreme' };
+  var prof = { data: null, status: 'loading', error: '' };
+  var toastTimer = 0;
+  var $id = function (id) { return document.getElementById(id); };
+  // 마지막으로 한 게임 이어하기 (kiho-nav.js 가 게임 페이지에서 기록)
+  (function () {
+    try {
+      var NAMES = { 'number-forge': ['넘버 포지', 'nf'], 'pixel-detective': ['픽셀 탐정', 'pd'], 'mirror-beam': ['미러 빔 랩', 'mb'], 'code-breaker': ['코드 브레이커', 'cb'],
+        'memory-grid': ['메모리 그리드', 'mg'], 'light-switch': ['라이트 스위치', 'ls'], 'color-flood': ['컬러 플러드', 'cf'] };
+      var last = JSON.parse(localStorage.getItem('kiho.nav.last') || 'null'), g = last && NAMES[last.id];
+      if (!g) return;
+      var d = localStorage.getItem('kiho.' + g[1] + '.difficulty') || 'normal';
+      var a = $id('resume'); a.href = last.id + '.html'; a.classList.add('on');
+      $id('resume-name').textContent = g[0] + ' 이어하기'; $id('resume-diff').textContent = '· ' + d.charAt(0).toUpperCase() + d.slice(1);
+    } catch (e) {}
+  })();
+
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function fmt(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+  function pill(tag, size) {
+    if (typeof KihoBadge !== 'undefined') { var p = KihoBadge.tagPill(tag, { size: size }); if (p) return p; }
+    return el('span', '', tag ? '[' + tag.name + ']' : '');
+  }
+  function toast(msg, isError) {
+    var t = $id('toast'); t.textContent = msg; t.className = 'toast' + (isError ? ' toast--error' : ''); t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3200);
+  }
+  function loginHref() { return 'login.html?next=' + encodeURIComponent('games.html'); }
+
+  function api(path, opts) {
+    opts = opts || {};
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 15000);
+    var headers = { 'Accept': 'application/json' };
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    if (Kiho.isMember() && Kiho.token()) headers['Authorization'] = 'Bearer ' + Kiho.token();
+    return fetch(API_BASE + path, {
+      method: opts.method || 'GET', headers: headers, signal: ctrl.signal,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        return { status: res.status, ok: res.ok && !!data && data.success === true, data: data };
+      });
+    }).then(function (r) { clearTimeout(timer); return r; }, function (e) { clearTimeout(timer); throw e; });
+  }
+  function errText(err) {
+    return err && err.name === 'AbortError' ? '서버 응답이 늦어지고 있어요. 잠시 후 다시 시도해 주세요.'
+                                            : '서버에 연결하지 못했어요. 네트워크 상태를 확인해 주세요.';
+  }
+  function apiMsg(r, fallback) {
+    if (r.data && r.data.error) return r.data.error;
+    if (r.status === 404) return '서버에서 API를 찾지 못했어요. Worker 배포 상태를 확인해 주세요.';
+    return fallback;
+  }
+
+  function loadProfile() {
+    if (!prof.data) { prof.status = 'loading'; renderAll(); }
+    return api('/api/tags/me').then(function (r) {
+      if (!r.ok) throw { friendly: true, message: apiMsg(r, '등급 정보를 불러오지 못했어요.') };
+      prof.data = r.data; prof.status = 'ready';
+    }).catch(function (err) {
+      prof.status = 'error'; prof.error = err && err.friendly ? err.message : errText(err);
+    }).then(renderAll);
+  }
+
+  function gate(root) {                     // 로딩 / 오류
+    if (prof.status === 'error') {
+      var e = el('div', 'pn-state pn-state--error'); e.appendChild(el('h3', '', '불러오지 못했어요')); e.appendChild(el('p', '', prof.error));
+      var b = el('button', 'btn btn--mint sm', '다시 시도'); b.type = 'button'; b.addEventListener('click', loadProfile); e.appendChild(b); root.appendChild(e); return true;
+    }
+    if (prof.status !== 'ready' || !prof.data) { var l = el('div', 'pn-state'); l.appendChild(el('h3', '', '불러오는 중…')); root.appendChild(l); return true; }
+    return false;
+  }
+
+  /* ---------- 등급표 ---------- */
+  function renderTiers() {
+    var root = $id('tier-root'); root.textContent = '';
+    if (gate(root)) return;
+    var d = prof.data;
+
+    var ms = el('div', 'ms');
+    ms.appendChild(pill(d.tier, 'lg'));
+    var t = el('div', 'ms-t'); t.appendChild(el('b', '', 'Lv.' + d.tier.level + ' ' + d.tier.name));
+    t.appendChild(el('span', '', d.authed ? '누적 ' + fmt(d.stats.stages) + ' 스테이지 클리어' : '로그인하면 내 등급과 진행도가 표시돼요'));
+    ms.appendChild(t);
+    if (!d.authed) { var lg = el('a', 'btn btn--mint sm ms-go', '로그인'); lg.href = loginHref(); ms.appendChild(lg); }
+    else {
+      var wrap = el('div', 'ms-go ms-equipped');
+      wrap.appendChild(el('span', 'ms-equipped-l', '장착 중'));
+      (d.display_tags || []).forEach(function (t) { wrap.appendChild(pill(t)); });
+      var tg = el('a', 'btn sm', d.is_admin ? '전 배지 꾸미기' : '내 태그 꾸미기'); tg.href = 'tags.html'; wrap.appendChild(tg);
+      ms.appendChild(wrap);
+    }
+
+    var bar = el('div', 'ms-bar');
+    if (d.next_tier) {
+      var span = d.next_tier.min - d.tier.min, into = d.stats.stages - d.tier.min;
+      var track = el('div', 'bar'); var fill = el('i'); fill.style.width = Math.max(0, Math.min(100, span ? into / span * 100 : 0)) + '%'; track.appendChild(fill); bar.appendChild(track);
+      var cap = el('div', 'bar-cap'); cap.appendChild(el('span', '', '다음 등급 Lv.' + d.next_tier.level + ' ' + d.next_tier.name));
+      cap.appendChild(el('span', '', d.authed ? fmt(d.next_tier.remaining) + ' 스테이지 남음' : fmt(d.next_tier.min) + ' 스테이지 필요')); bar.appendChild(cap);
+    } else { bar.appendChild(el('div', 'bar-cap', '최고 등급에 도달했어요!')); }
+    ms.appendChild(bar);
+    root.appendChild(ms);
+
+    var table = el('div', 'tt');
+    var head = el('div', 'tt-head'); ['등급', '태그', '필요 클리어', '상태'].forEach(function (h) { head.appendChild(el('span', '', h)); }); table.appendChild(head);
+    d.tiers.forEach(function (tr) {
+      var cur = d.authed && tr.level === d.tier.level;
+      var cls = 'tt-row' + (cur ? ' is-current' : '') + (d.authed && tr.owned && !cur ? ' owned' : '') + (d.authed && !tr.owned ? ' locked' : '');
+      var row = el('div', cls);
+      row.appendChild(el('span', 'tt-lv', 'Lv.' + tr.level));
+      var tag = el('span', 'tt-tag'); tag.appendChild(pill(tr, 'lg')); row.appendChild(tag);
+      row.appendChild(el('span', 'tt-need', '누적 ' + fmt(tr.min) + ' 스테이지'));
+      row.appendChild(el('span', 'tt-state', !d.authed ? '' : cur ? '● 현재 등급' : tr.owned ? '✓ 달성' : '🔒 ' + fmt(tr.min - d.stats.stages) + ' 남음'));
+      table.appendChild(row);
+    });
+    root.appendChild(table);
+  }
+
+  /* ---------- 퀘스트 ---------- */
+  function claim(q) {
+    return api('/api/quests/claim', { method: 'POST', body: { quest_id: q.id } }).then(function (r) {
+      if (!r.ok) { toast(apiMsg(r, '태그를 받지 못했어요.'), true); return loadProfile(); }
+      toast('“' + r.data.tag.name + '” 태그를 받았어요! 내 태그에서 장착해 보세요.');
+      return loadProfile();
+    }).catch(function (e) { toast(errText(e), true); });
+  }
+
+  function questCard(q, d) {
+    var box = el('div', 'qq' + (q.done ? ' done' : '') + (q.limited ? ' limited' : '') + (!q.available && !q.claimed ? ' gone' : ''));
+    var h = el('div', 'qq-h'); h.appendChild(el('b', '', q.name)); if (q.limited) h.appendChild(el('span', 'ltd', 'LIMITED')); box.appendChild(h);
+    box.appendChild(el('div', 'qq-d', q.desc));
+    var bar = el('div', 'bar'); var fill = el('i'); fill.style.width = Math.round(q.goal ? q.current / q.goal * 100 : 0) + '%'; bar.appendChild(fill); box.appendChild(bar);
+    box.appendChild(el('div', 'qq-p', d.authed ? fmt(q.current) + ' / ' + fmt(q.goal) : '목표 ' + fmt(q.goal)));
+
+    var act = el('div', 'qq-act');
+    var tg = el('div', 'qq-tag'); tg.appendChild(document.createTextNode('보상')); tg.appendChild(pill(q.tag)); act.appendChild(tg);
+    if (!d.authed) act.appendChild(el('span', 'lock', '로그인 필요'));
+    else if (q.claimed) { var w = el('span', 'lock'); w.appendChild(document.createTextNode('✓ 받음 · ')); var a = el('a', '', '장착하기'); a.href = 'tags.html'; w.appendChild(a); act.appendChild(w); }
+    else if (!q.available) act.appendChild(el('span', 'lock', '시즌 종료'));
+    else if (q.done) { var c = el('button', 'btn btn--mint sm', '태그 받기'); c.type = 'button'; c.addEventListener('click', function () { c.disabled = true; claim(q); }); act.appendChild(c); }
+    else act.appendChild(el('span', 'lock', '진행 중'));
+    box.appendChild(act);
+    return box;
+  }
+
+  // 카테고리 표시 순서 · 라벨 · 부제(퀘스트가 90개라 그룹으로 나눠서 보여줍니다)
+  var QUEST_CATS = [
+    ['cleared', '완주', '5스테이지를 끝까지 클리어한 횟수'],
+    ['stages', '누적 스테이지', '지금까지 클리어한 스테이지 총합'],
+    ['difficulty', '난이도별 정복', '난이도마다 몇 번 완주했는지'],
+    ['perfect', '퍼펙트', '기회를 하나도 잃지 않은 완주'],
+    ['combo', '콤보', '5스테이지 연속 무실수'],
+    ['played', '플레이 횟수', '도전한 횟수 자체'],
+    ['rank', '랭킹', '리더보드 순위 관련'],
+    ['speed', '스피드런', '5스테이지 완주 최고 기록'],
+    ['flavor', '플레이버', '특정 시간대에 플레이하면'],
+    ['special', '종합 업적', '여러 조건을 한꺼번에'],
+  ];
+
+  function categoryGroup(root, id, title, note, quests, d, opts) {
+    if (!quests.length) return;
+    var h = el('div', 'sub-h cat-h'); h.setAttribute('data-cat', id);
+    var left = el('div', 'cat-h-l'); left.appendChild(el('h3', '', title)); left.appendChild(el('span', '', note));
+    h.appendChild(left);
+    var count = el('span', 'cat-count', quests.filter(function (q) { return q.done; }).length + ' / ' + quests.length);
+    h.appendChild(count);
+    var toggle = el('button', 'cat-toggle', opts && opts.openByDefault ? '접기' : '펼치기'); toggle.type = 'button';
+    h.appendChild(toggle);
+    root.appendChild(h);
+
+    var list = el('div', 'qlist'); list.hidden = !(opts && opts.openByDefault);
+    quests
+      .slice()
+      .sort(function (a, b) { return (b.done && !b.claimed) - (a.done && !a.claimed) || a.goal - b.goal; })
+      .forEach(function (q) { list.appendChild(questCard(q, d)); });
+    root.appendChild(list);
+
+    toggle.addEventListener('click', function () {
+      list.hidden = !list.hidden;
+      toggle.textContent = list.hidden ? '펼치기' : '접기';
+    });
+  }
+
+  function renderQuests() {
+    var root = $id('quest-root'); root.textContent = '';
+    var chip = $id('season-chip');
+    if (prof.data && prof.data.season) { chip.textContent = '시즌 ' + prof.data.season.current; chip.hidden = false; } else chip.hidden = true;
+    if (gate(root)) return;
+    var d = prof.data;
+
+    var h1 = el('div', 'sub-h'); h1.appendChild(el('h3', '', '한정판 태그')); h1.appendChild(el('span', '', '시즌 ' + d.season.current + ' 동안만 받을 수 있어요')); root.appendChild(h1);
+    var l1 = el('div', 'qlist'); d.quests.filter(function (q) { return q.limited; }).forEach(function (q) { l1.appendChild(questCard(q, d)); }); root.appendChild(l1);
+
+    var h2 = el('div', 'sub-h'); h2.appendChild(el('h3', '', '일반 퀘스트 (' + d.quests.filter(function (q) { return !q.limited && !q.exclusive; }).length + '개)'));
+    h2.appendChild(el('span', '', '카테고리를 눌러 펼쳐 보세요')); root.appendChild(h2);
+    QUEST_CATS.forEach(function (c, idx) {
+      var qs = d.quests.filter(function (q) { return !q.limited && q.category === c[0]; });
+      // 아직 못 받은(=진행 중인) 항목이 있는 카테고리는 기본으로 펼쳐 둡니다.
+      var openByDefault = qs.some(function (q) { return q.done && !q.claimed; });
+      categoryGroup(root, c[0], c[1], c[2], qs, d, { openByDefault: openByDefault });
+    });
+
+    var h3 = el('div', 'sub-h'); h3.appendChild(el('h3', '', '시즌 랭킹 태그')); h3.appendChild(el('span', '', '시즌 ' + d.season.current + ' 진행 중')); root.appendChild(h3);
+    root.appendChild(el('p', 'note', '시즌이 끝나면 난이도별 TOP 3 에게 “시즌 ' + d.season.current + ' Hard 1등” 같은 태그를 드려요. 한 번 받으면 다음 시즌에도 계속 가질 수 있어요.'));
+    if (d.authed && d.my_places.length) {
+      var pl = el('div', 'places');
+      d.my_places.forEach(function (p) { var chipEl = el('span', 'place-chip'); chipEl.appendChild(document.createTextNode((DIFF_NAME[p.difficulty] || p.difficulty) + ' 현재 ')); chipEl.appendChild(el('b', '', p.place + '위')); pl.appendChild(chipEl); });
+      root.appendChild(pl);
+    }
+    if (d.authed && d.season_tags.length) {
+      var n = el('p', 'note'); n.appendChild(document.createTextNode('받은 시즌 태그 ' + d.season_tags.length + '개 · ')); var a2 = el('a', '', '내 태그에서 장착하기'); a2.href = 'tags.html'; n.appendChild(a2); root.appendChild(n);
+    }
+  }
+
+  function renderAll() {
+    renderTiers(); renderQuests();
+    $id('dot-quests').hidden = !(prof.data && prof.data.authed && prof.data.quests_ready > 0);
+  }
+
+  /* ==============================================================
+     등급표/퀘스트 아코디언 — 너무 큰 목록이 화면을 다 차지하지 않도록
+     기본은 접어 두고, 마지막으로 펼쳐 둔 상태를 기억합니다.
+  ============================================================== */
+  function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  function setPanel(key, btn, panel, open) {
+    btn.setAttribute('aria-expanded', String(open));
+    panel.classList.toggle('is-open', open);
+    safeSet('kiho.panel.' + key, open ? '1' : '0');
+  }
+  function initAccordion(key, btnId, panelId) {
+    var btn = $id(btnId), panel = $id(panelId);
+    var open = safeGet('kiho.panel.' + key) === '1';   // 기본값: 접힘
+    setPanel(key, btn, panel, open);
+    btn.addEventListener('click', function () { setPanel(key, btn, panel, btn.getAttribute('aria-expanded') !== 'true'); });
+    return { open: function () { setPanel(key, btn, panel, true); } };
+  }
+  var tierPanel = initAccordion('tiers', 'toggle-tiers', 'tier-collapse');
+  var questPanel = initAccordion('quests', 'toggle-quests', 'quest-collapse');
+  // 해시로 바로 들어오면(#tiers, #quests) 그 섹션은 자동으로 펼칩니다.
+  if (location.hash === '#tiers') tierPanel.open();
+  if (location.hash === '#quests') questPanel.open();
+
+  loadProfile();
+})();
+</script>
+</body>
+</html>
